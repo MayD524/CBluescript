@@ -1,0 +1,1 @@
+mul = lambda x,y: x*y;x=int(input("X> "));y=int(input("Y> "));print(mul(x,y))
