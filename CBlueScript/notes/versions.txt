@@ -7,21 +7,26 @@ c (optional)) The minor version
 d (optional)) Patch number
 
 Versions and Notes:
-1.0 (working on) "The basics"
+1.0 (Released|Current Version) "The basics"
     While Loop (done)
-    if else
+    if else    (done)
     data types (done)
+    print      (done)
 
-1.2 (future) "Functions and scopes update"
-    includes
-    Basic functions
+1.2 (Working On) "Functions and scopes update"
+    includes (done)
+    Basic functions (done)
+    scope (done)
     arrays
-    recursion (change to runtime with func calls)
+    recursion (change to runtime with func calls) (done)
     else if
-    free keyword (free a variable from memory)
+    free keyword (free a variable from memory) (done)
     force keyword (force set a flag)
+    basic IO (finished print & input)
+    nesting (done)
 
 1.3 (future) "Operations Expanded"
+    update README.md on repo
     bitwise operations
     power operator
     modulus operator

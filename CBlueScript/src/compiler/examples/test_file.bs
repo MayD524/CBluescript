@@ -1,0 +1,5 @@
+function test(arg)
+{
+    arg += 1
+    print arg
+}

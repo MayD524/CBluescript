@@ -24,6 +24,7 @@ private:
     // allows for 2^64 lines (hopefully more then enough)
     unsigned long program_counter = 0;
     unsigned long max_program_lines = 0;
+    vector<unsigned long> func_returns;
     unsigned long function_return = 0;
     vector<string> program_lines;
     bs_memory memoryObject;
@@ -50,7 +51,7 @@ private:
 
         else
         {
-            printf("Label %s does not exist (line : %i)", label.c_str(), this->program_counter);
+            printf("Label %s does not exist (line : %li)", label.c_str(), this->program_counter);
             this->canRun = false;
             return;
         }
@@ -72,6 +73,11 @@ public:
         #ifdef DEBUG
             cout << "\n\n\nMemory:\n";
             this->memoryObject.getAllKeys();
+            cout << "\n\nStack:\n";
+            for (bsMemoryObject obj : this->memoryObject.bsStack)
+            {
+                cout << obj.value << endl;
+            }
             cout << "\n\nFlags:\n";
             cout << "Eql Flag:" << this->memoryObject.eqlFlag << endl;
             cout << "Grt Flag:" << this->memoryObject.grtFlag << endl;
@@ -84,6 +90,18 @@ public:
                 vector<string> arg_parse = split(cmd_args, ",");
                 this->memoryObject.bsMovCmd(arg_parse[0], arg_parse[1]);
                 break;
+            }
+
+            case 418:
+            {
+                if (cmd_args.rfind("%", 0) == 0)
+                    this->memoryObject.varRemove(split(cmd_args, "%")[1]);
+                
+                else
+                {
+                    cout << "variable " << cmd_args << " does not exist.\n";
+                    return 1;
+                }
             }
 
             case 344: // out (print)
@@ -133,6 +151,8 @@ public:
                 else
                     tailVar = this->memoryObject.createObject(split(cmdSplit[1], "%")[1]);
 
+                debug(headVar.value);
+                debug(tailVar.value);
                 if (headVar.value == tailVar.value)
                     this->memoryObject.eqlFlag = true;
                 
@@ -140,6 +160,7 @@ public:
                 {
                     if (headVar.dType.compare("numeric") && tailVar.dType.compare("numeric"))
                     {
+                        
                         if (stof(headVar.value) > stof(tailVar.value))
                             this->memoryObject.grtFlag = true;
                     }
@@ -287,6 +308,7 @@ public:
                 }
                 break;
             }
+            
 
             case 412: // call
             {
@@ -294,7 +316,8 @@ public:
 
                 if (it != this->memoryObject.labelLocations.end())
                 {
-                    this->function_return = it->second;
+                    this->func_returns.push_back(this->program_counter);
+                    //this->function_return = this->program_counter;
                     this->program_counter = it->second;
                 }
                 else
@@ -308,14 +331,14 @@ public:
 
             case 331: // ret
             {
-                this->program_counter = this->function_return;
+                this->program_counter = this->func_returns.back();
+                this->func_returns.pop_back();
                 this->function_return = 0;
       
                 break;
             }
         
         }
-
         return 0; // it worked without error
     }
 
@@ -327,7 +350,6 @@ public:
             
             // kill comments
             this->program_lines[lineNo] = trim(split(this->program_lines[lineNo], ";")[0]);
-
             if ( this->program_lines[lineNo].rfind("label",0) == 0)
             {
                 string label_ptr = split(this->program_lines[lineNo], " ")[1];
@@ -342,7 +364,6 @@ public:
         while (this->program_counter < this->max_program_lines && this->canRun == true)
         {
             string current_line = this->program_lines[this->program_counter];
-            
             #ifdef BLUE_SCRIPT_STEPTHROUGH
                 string dummy;
                 //this->memoryObject.getAllKeys();
@@ -350,7 +371,7 @@ public:
                 cout << "Line Data: " << current_line << endl;
                 if (this->program_counter + 1 < this->max_program_lines)
                     cout << "Next: " << this->program_counter + 1 << ":" << this->program_lines[this->program_counter+1];
-                debug(current_line);
+                cout << current_line << endl;
                 #ifndef BS_AUTOWALK
                     getline(cin, dummy);
                 #endif
@@ -358,7 +379,8 @@ public:
 
 
             vector<string> lineSplit = split(current_line, " ", true);
-            
+            if( lineSplit.size() == 1)
+                lineSplit.push_back(" ");
             int cmdOut = run_cmd(dumbHash(lineSplit[0]), lineSplit[1]);
 
             if (cmdOut != 0)

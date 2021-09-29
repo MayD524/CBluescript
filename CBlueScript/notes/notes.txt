@@ -9,12 +9,12 @@ ideas:
 
 function params (invert the order for func calls)
 push to stack
-function test(arg1, arg2) -> push arg1
-                             push arg2
+function test(arg1, arg2) -> pop arg1
+                             pop arg2
 
 pop from stack
-test(arg1, arg2)          -> pop arg2
-                             pop arg1
+test(arg1, arg2)          -> push arg2
+                             push arg1
 
 USE VARIABLES!!!!!!!
 ****** ARRAYS!!!!

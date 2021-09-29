@@ -1,0 +1,7 @@
+
+
+function main()
+{
+    input "Insert a numebr> ",a
+    print a
+}

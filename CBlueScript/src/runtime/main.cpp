@@ -7,6 +7,7 @@
 //#define DEBUG  // for enabling debug
 //#define BLUE_SCRIPT_STEPTHROUGH // enable step through
 //#define BS_AUTOWALK
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -20,7 +21,7 @@ int main( int argc, char** argv )
     if (argc > 0)
     {
         string fname = string(argv[1]);
-        cout << fname << endl;
+        //6cout << fname << endl;
         vector<string> fData = readFile(fname);
 
         bs_runtime runtime = bs_runtime(fData);

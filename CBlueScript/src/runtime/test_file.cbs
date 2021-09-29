@@ -1,18 +1,8 @@
-mov a,1
-mov _rxI}C$,0
-cmp %a,%_rxI}C$
-mov |XJj}aV_isSet,0
-jne end_of_if_|XJj}aV
-mov |XJj}aV_isSet,1
-mov -~1VI^:,%a
-add -~1VI^:,1
-mov a,%-~1VI^:
-out %a
-label end_of_if_|XJj}aV
-mov i8xB>8@,1
-cmp %|XJj}aV_isSet,%i8xB>8@
-je end_of_else_|XJj}aV
-mov 2\-5b+7,"hello world"
-out %2\-5b+7
-label end_of_else_|XJj}aV
+jmp main
+label main ; start of function
+    mov main.T.~PAA>,Insert a numebr> 
+    in main.a,%main.T.~PAA>
+    add main.a,1
+    out %main.a
+    jmp EOF_BS_JMP_POINT
 label EOF_BS_JMP_POINT
