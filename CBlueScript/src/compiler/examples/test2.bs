@@ -1,7 +1,7 @@
-//include libs/math.bs
-include examples/test.cbs
+include libs/stdlib.cbs
 
 function main()
 {
-    test()
+    a = size("hello")
+    print a
 }

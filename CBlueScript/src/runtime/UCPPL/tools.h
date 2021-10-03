@@ -111,6 +111,17 @@ string getPass( const string prompt=">", int maxStringSize = MAX_STRING_SIZE)
 }
 #endif
 
+template<typename lookType>
+bool anyInVector(const lookType& lookfor, const vector<lookType>& lookIn)
+{
+    for (lookType l : lookIn)
+    {
+        if (l == lookfor)
+            return true;
+    }
+    return false;
+}
+
 string toLower( const string inpt)
 {
     locale loc;

@@ -1,4 +1,0 @@
-label test
-pop test.a
-out %test.a
-ret

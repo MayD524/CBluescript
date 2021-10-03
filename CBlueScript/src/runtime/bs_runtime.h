@@ -29,6 +29,7 @@ private:
     unsigned long function_return = 0;
     vector<string> program_lines;
     bs_memory memoryObject;
+    bool debugEnabled = false;
     bool canRun = true;
 
     // just convert a string to a sum of all chars in it
@@ -63,26 +64,30 @@ private:
 
 
 public:
-    bs_runtime(vector<string> lines)
+    bs_runtime(vector<string> lines, bool debugEnabled)
     {
         this->program_lines = lines;
         this->max_program_lines = lines.size();
+        this->debugEnabled = debugEnabled;
     }
 
     int run_cmd( int cmd, string cmd_args )
     {
-        #ifdef DEBUG
+        if (this->debugEnabled)
+        {
             cout << "\n\n\nMemory:\n";
             this->memoryObject.getAllKeys();
             cout << "\n\nStack:\n";
             for (bsMemoryObject obj : this->memoryObject.bsStack)
             {
-                cout << this->getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
+                cout << this->memoryObject.getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
             }
             cout << "\n\nFlags:\n";
             cout << "Eql Flag:" << this->memoryObject.eqlFlag << endl;
             cout << "Grt Flag:" << this->memoryObject.grtFlag << endl;
-        #endif
+            string dummy;
+            getline(cin, dummy);
+        }
         //debug(cmd);
         switch (cmd)
         {
@@ -129,6 +134,19 @@ public:
 
             case 656: // sizeof <return ptr>,<var ptr>
             {
+                vector<string> argSplit = split(cmd_args, ",");
+                if (argSplit[1].rfind("%", 0) == 0)
+                {
+                    bsMemoryObject mem = this->memoryObject.getVar(split(argSplit[1], "%")[1]);
+                    unsigned long varSize = this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj).size();
+                    this->memoryObject.bsMovCmd(argSplit[0], to_string(varSize));
+                }
+                else
+                {
+                    printf("The variables %s does not exist", argSplit[1].c_str());
+                    exit(20);
+                }
+                
                 break;
             }
 

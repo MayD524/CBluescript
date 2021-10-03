@@ -139,6 +139,13 @@ class bsCompiler:
                 
             self.parsedLines.append(f"mov {self.curScope[-1]}.{varName},{varExpress}")
     
+    def preCompiledHandle( self, lines:list ) -> None:
+        labels = [ x for x in lines if x.startswith('label')]
+        
+        for label in labels:
+            labelName = label.split(' ',1)[1]
+            self.declairedVars[labelName] = 'function'
+    
     def handle_includes( self, lines:list ) -> None:
         includes = [x for x in lines if x.startswith('include')]
         for include in includes:
@@ -148,9 +155,11 @@ class bsCompiler:
                 newLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
                 self.handle_includes(newLines)
                 self.filelines = newLines + self.filelines
+
             else:
                 newPreParsedLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
                 self.parsedLines += newPreParsedLines
+                self.preCompiledHandle(newPreParsedLines)
 
             
             
