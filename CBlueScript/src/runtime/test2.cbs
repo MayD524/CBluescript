@@ -1,0 +1,14 @@
+jmp main
+label size
+pop size.lookAt
+sizeof size.varSize,%size.lookAt
+push %size.varSize
+free %size.varSize
+ret
+label main ; start of function
+push "hello"
+call size
+pop main.a
+out %main.a
+jmp EOF_BS_JMP_POINT
+label EOF_BS_JMP_POINT

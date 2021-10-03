@@ -47,19 +47,19 @@ class bsBlockObjects:
             exper_split = exper.split(logic_oper[0])
             logic_oper = logic_oper[1]
         
-        if exper_split[0].strip() in self.compiler.declairedVars.keys():
-            exper_split[0] = f"%{exper_split[0].strip()}"
+        if self.compiler.check_exists(exper_split[0].strip()):
+            exper_split[0] = f"%{self.compiler.curScope[-1]}.{exper_split[0].strip()}"
         else:
             tmpVar =  self.compiler.gen_tmpVars()
-            self.compiler.parsedLines.append(f"mov {tmpVar},{exper_split[0].strip()}")
-            exper_split[0] = f"%{tmpVar}"
+            self.compiler.parsedLines.append(f"mov {self.compiler.curScope[-1]}.{tmpVar},{exper_split[0].strip()}")
+            exper_split[0] = f"%{self.compiler.curScope[-1]}.{tmpVar}"
 
-        if exper_split[1].strip() in  self.compiler.declairedVars.keys():
-            exper_split[1] = f"%{exper_split[1].strip()}"
+        if self.compiler.check_exists(exper_split[1].strip()):
+            exper_split[1] = f"%{self.compiler.curScope[-1]}.{exper_split[1].strip()}"
         else:
             tmpVar =  self.compiler.gen_tmpVars()
-            self.compiler.parsedLines.append(f"mov {tmpVar},{exper_split[1].strip()}")
-            exper_split[1] = f"%{tmpVar}"
+            self.compiler.parsedLines.append(f"mov {self.compiler.curScope[-1]}.{tmpVar},{exper_split[1].strip()}")
+            exper_split[1] = f"%{self.compiler.curScope[-1]}.{tmpVar}"
 
         if logic_oper == "<=":
             self.cmpLine = f"cmp {exper_split[1].strip()},{exper_split[0].strip()}"

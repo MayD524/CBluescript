@@ -1,7 +1,7 @@
-
+include libs/stdlib.cbs
 
 function main()
 {
-    input "Insert a numebr> ",a
+    a = size("hello")
     print a
 }

@@ -12,7 +12,8 @@
 #include <string>
 
 #include "UCPPL/UCPPL.h"
-#include "bs_memory.h"
+#include "bs_memory_new.h"
+#include "bs_defines.h"
 
 using namespace std;
 
@@ -28,6 +29,7 @@ private:
     unsigned long function_return = 0;
     vector<string> program_lines;
     bs_memory memoryObject;
+    bool debugEnabled = false;
     bool canRun = true;
 
     // just convert a string to a sum of all chars in it
@@ -62,26 +64,30 @@ private:
 
 
 public:
-    bs_runtime(vector<string> lines)
+    bs_runtime(vector<string> lines, bool debugEnabled)
     {
         this->program_lines = lines;
         this->max_program_lines = lines.size();
+        this->debugEnabled = debugEnabled;
     }
 
     int run_cmd( int cmd, string cmd_args )
     {
-        #ifdef DEBUG
+        if (this->debugEnabled)
+        {
             cout << "\n\n\nMemory:\n";
             this->memoryObject.getAllKeys();
             cout << "\n\nStack:\n";
             for (bsMemoryObject obj : this->memoryObject.bsStack)
             {
-                cout << obj.value << endl;
+                cout << this->memoryObject.getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
             }
             cout << "\n\nFlags:\n";
             cout << "Eql Flag:" << this->memoryObject.eqlFlag << endl;
             cout << "Grt Flag:" << this->memoryObject.grtFlag << endl;
-        #endif
+            string dummy;
+            getline(cin, dummy);
+        }
         //debug(cmd);
         switch (cmd)
         {
@@ -92,7 +98,7 @@ public:
                 break;
             }
 
-            case 418:
+            case 418: // rem
             {
                 if (cmd_args.rfind("%", 0) == 0)
                     this->memoryObject.varRemove(split(cmd_args, "%")[1]);
@@ -102,6 +108,46 @@ public:
                     cout << "variable " << cmd_args << " does not exist.\n";
                     return 1;
                 }
+                break;
+            }
+
+            case 450: // type <return ptr>,<var pointer>
+            {
+                vector<string> argSplit = split(cmd_args, ",");
+                if (argSplit[1].rfind("%",0) == 0)
+                {
+                    bsMemoryObject obj = this->memoryObject.getVar(split(cmd_args, "%")[1]);
+                    this->memoryObject.bsMovCmd(argSplit[0], this->memoryObject.stringReperOfType(obj.isObjectOf));
+                }
+                else
+                {
+                    cout << "Variable " << argSplit[1] << " does not exist or hasn't been defined.\n";
+                    return 1;
+                }
+                break;
+            }
+
+            case 427: // cast
+            {
+                break;
+            }
+
+            case 656: // sizeof <return ptr>,<var ptr>
+            {
+                vector<string> argSplit = split(cmd_args, ",");
+                if (argSplit[1].rfind("%", 0) == 0)
+                {
+                    bsMemoryObject mem = this->memoryObject.getVar(split(argSplit[1], "%")[1]);
+                    unsigned long varSize = this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj).size();
+                    this->memoryObject.bsMovCmd(argSplit[0], to_string(varSize));
+                }
+                else
+                {
+                    printf("The variables %s does not exist", argSplit[1].c_str());
+                    exit(20);
+                }
+                
+                break;
             }
 
             case 344: // out (print)
@@ -109,7 +155,7 @@ public:
                 if (cmd_args.rfind("%", 0) == 0)
                 {
                     bsMemoryObject mem = this->memoryObject.getVar(split(cmd_args, "%")[1]);
-                    cout << mem.value << endl;
+                    cout << this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj) << endl;
                 }
                 else
                     cout << cmd_args << endl;
@@ -122,7 +168,10 @@ public:
                 string inputValue;
 
                 if (arg_split[1].rfind("%", 0) == 0)
-                    arg_split[1] = this->memoryObject.getVar(split(arg_split[1], "%")[1]).value;
+                {
+                    bsMemoryObject tmpObj = this->memoryObject.getVar(split(arg_split[1], "%")[1]);
+                    arg_split[1] = this->memoryObject.getStringReperOfVariable(tmpObj.isObjectOf, tmpObj.obj);
+                }
                 // print prompt
                 cout << arg_split[1];
                 getline(cin, inputValue);
@@ -151,21 +200,27 @@ public:
                 else
                     tailVar = this->memoryObject.createObject(split(cmdSplit[1], "%")[1]);
 
-                debug(headVar.value);
-                debug(tailVar.value);
-                if (headVar.value == tailVar.value)
+                if (this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj).compare(this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, tailVar.obj)))
                     this->memoryObject.eqlFlag = true;
-                
+
                 else
                 {
-                    if (headVar.dType.compare("numeric") && tailVar.dType.compare("numeric"))
+                    if (headVar.isObjectOf == BS_Num && tailVar.isObjectOf == BS_Num)
                     {
-                        
-                        if (stof(headVar.value) > stof(tailVar.value))
-                            this->memoryObject.grtFlag = true;
+                        BS_NumType headVarNum = any_cast<BS_NumType>(headVar.obj);
+                        BS_NumType tailVarNum = any_cast<BS_NumType>(tailVar.obj);
+                        if (headVarNum.isFloat() || tailVarNum.isFloat())
+                        {
+                            if(headVarNum.getValue<float>() > tailVarNum.getValue<float>())
+                                this->memoryObject.grtFlag = true;
+                        }
+                        else
+                        {
+                            if(headVarNum.getValue<long>() > tailVarNum.getValue<long>())
+                                this->memoryObject.grtFlag = true;
+                        }
                     }
                 }
-
 
                 break;
             }
@@ -250,20 +305,20 @@ public:
 
                 bsMemoryObject headVar = this->memoryObject.getVar(varName);
                 bsMemoryObject tailVar;
-                debug(headVar.dType);
-                if (headVar.dType.compare("string") == 0)
+
+                if (headVar.isObjectOf == BS_String)
                 {
                     if (splitArgs[1].rfind("%", 0) == 0)
                         tailVar = this->memoryObject.getVar(split(splitArgs[1], "%", true)[1]);
                     else
                         tailVar = this->memoryObject.createObject(splitArgs[1]);
 
-                    this->memoryObject.bsMovCmd(varName, headVar.value + tailVar.value);
+                    this->memoryObject.bsMovCmd(varName, this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj) + this->memoryObject.getStringReperOfVariable(tailVar.isObjectOf, tailVar.obj));
                 }
                 else
                 {
-                    vector<float> parsed = this->memoryObject.mathParseToFloat(cmd_args);
-                    this->memoryObject.bsMovCmd(varName, to_string(parsed[0] + parsed[1]));
+                    bsMemoryObject parsedMath = this->memoryObject.runMath(cmd_args, BS_ADD);
+                    this->memoryObject.putObjInMemory(varName,parsedMath);
                 }
                 break;
             }
@@ -271,24 +326,24 @@ public:
             case 330: // sub
             {
                 string varName = split(cmd_args, ",", true)[0];
-                vector<float> parsed = this->memoryObject.mathParseToFloat(cmd_args);
-                this->memoryObject.bsMovCmd(varName, to_string(parsed[0] - parsed[1]));
+                bsMemoryObject parsedMath = this->memoryObject.runMath(cmd_args, BS_SUB);
+                this->memoryObject.putObjInMemory(varName,parsedMath);
                 break;
             }
 
             case 334: // mul
             {
                 string varName = split(cmd_args, ",", true)[0];
-                vector<float> parsed = this->memoryObject.mathParseToFloat(cmd_args);
-                this->memoryObject.bsMovCmd(varName, to_string(parsed[0] * parsed[1]));
+                bsMemoryObject parsedMath = this->memoryObject.runMath(cmd_args, BS_MUL);
+                this->memoryObject.putObjInMemory(varName,parsedMath);
                 break;
             }
 
             case 323: // div
             {
                 string varName = split(cmd_args, ",", true)[0];
-                vector<float> parsed = this->memoryObject.mathParseToFloat(cmd_args);
-                this->memoryObject.bsMovCmd(varName, to_string(parsed[0] / parsed[1]));
+                bsMemoryObject parsedMath = this->memoryObject.runMath(cmd_args, BS_DIV);
+                this->memoryObject.putObjInMemory(varName,parsedMath);
                 break;
             }
         

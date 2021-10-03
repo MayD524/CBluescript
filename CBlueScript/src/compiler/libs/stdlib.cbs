@@ -1,0 +1,6 @@
+label size
+    pop size.lookAt
+    sizeof size.varSize,%size.lookAt
+    push %size.varSize
+    free %size.varSize
+    ret
