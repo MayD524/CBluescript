@@ -27,7 +27,8 @@ class bsCompiler:
             "while",
             "print",
             "input",
-            "return"
+            "return",
+            "free"
         ]
         
         self.mathOpers = ["*", "/", "+", "-"]
@@ -51,10 +52,10 @@ class bsCompiler:
 
     
     def gen_tmpVars( self ) -> str:
-        var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1")
+        var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";", '2')
         ## should stop from duplicates happening
         while var in self.declairedVars.keys():
-            var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";",1)
+            var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";","2")
 
         return var
 
@@ -108,6 +109,7 @@ class bsCompiler:
                 ## call the function
                 self.parsedLines.append(f"call {funcName}")
                 self.parsedLines.append(f"pop {self.curScope[-1]}.{lineSplit[0].strip()}")
+                self.declairedVars[f"{self.curScope[-1]}.{lineSplit[0].strip()}"] = "variable"
             else:
                 ## wtf the function doesn't exist
                 raise Exception(f"Function {funcName} does not exist")
@@ -141,10 +143,16 @@ class bsCompiler:
         includes = [x for x in lines if x.startswith('include')]
         for include in includes:
             fileName = include.split(" ",1)[1]
-            newLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
-            self.handle_includes(newLines)
+            newLines = []
+            if not fileName.endswith(".cbs"):
+                newLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
+                self.handle_includes(newLines)
+                self.filelines = newLines + self.filelines
+            else:
+                newPreParsedLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
+                self.parsedLines += newPreParsedLines
 
-            self.filelines = newLines + self.filelines
+            
             
             self.filelines.remove(include)
 
@@ -168,6 +176,15 @@ class bsCompiler:
                         self.parsedLines.append(f"mov {self.curScope[-1]}.{tvar},{splitLine[1]}")
                         splitLine[1] = f"%{self.curScope[-1]}.{tvar}"
                     self.parsedLines.append(f"out {splitLine[1]}")
+
+                elif splitLine[0] == "free":
+                    splitLine[1] = splitLine[1].strip()
+                    if self.check_exists(splitLine[1]):
+                        self.parsedLines.append(f"free %{self.curScope[-1]}.{splitLine[1]}")
+                    else:
+                        tmpVar = self.gen_tmpVars()
+                        self.parsedLines.append(f"mov {self.curScope[-1]}.{tmpVar},{splitLine[1]}")
+                        self.parsedLines.append(f'free %{self.curScope[-1]}.{tmpVar}')
 
                 elif splitLine[0] == "return":
                     splitLine[1] = splitLine[1].strip()
@@ -257,6 +274,10 @@ def main( filename:str ) -> None:
     fileLines = [x.rsplit('//')[0].strip() for x in fileLines]
     compiler = bsCompiler(filename, fileLines)
     compiler.compileLines()
+
+    writeFile = filename.replace(".bs", ".cbs")
+    with open(writeFile, "w+"): pass
+    UPL.Core.file_manager.write_file(writeFile, "\n".join(compiler.parsedLines))
 
 
 if __name__ == "__main__":

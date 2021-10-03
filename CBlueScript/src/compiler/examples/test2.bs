@@ -1,7 +1,7 @@
-
+//include libs/math.bs
+include examples/test.cbs
 
 function main()
 {
-    input "Insert a numebr> ",a
-    print a
+    test()
 }

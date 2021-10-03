@@ -1,3 +1,11 @@
+# vscode
+.vscode/
+
+# python
+__pycache__/
+*.pyc
+*$py.class
+
 # Prerequisites
 *.d
 

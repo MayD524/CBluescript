@@ -1,5 +1,6 @@
 function test(arg)
 {
-    arg += 1
-    print arg
+    a = 2
+    a = pow(a, 2)
+    print a
 }

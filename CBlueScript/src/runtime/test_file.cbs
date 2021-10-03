@@ -1,8 +1,4 @@
-jmp main
-label main ; start of function
-    mov main.T.~PAA>,Insert a numebr> 
-    in main.a,%main.T.~PAA>
-    add main.a,1
-    out %main.a
-    jmp EOF_BS_JMP_POINT
-label EOF_BS_JMP_POINT
+mov a,10
+type a,%a
+out %a
+;sizeof b,%a
