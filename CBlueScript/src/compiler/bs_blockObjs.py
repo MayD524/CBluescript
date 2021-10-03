@@ -155,7 +155,7 @@ class bsElseObj(bsBlockObjects):
         elseTmpVar = self.compiler.gen_tmpVars()
         self.compiler.parsedLines.append(f"mov {elseTmpVar},1 ; temp constant")
         self.compiler.parsedLines.append(f"cmp %{self.prev_id}_isSet,%{elseTmpVar} ; compair the isSet of the previous if block")
-        self.compiler.parsedLines.append(f"je end_of_else_{self.blockName} ; jump if the previous if was true")
+        self.compiler.parsedLines.append(f"jne end_of_else_{self.blockName} ; jump if the previous if was true")
         
 
 
