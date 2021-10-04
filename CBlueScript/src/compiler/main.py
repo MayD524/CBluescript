@@ -161,7 +161,7 @@ class bsCompiler:
             self.declairedVars[labelName] = 'function'
     
     def handle_includes( self, lines:list ) -> None:
-        includes = [x for x in lines if x.startswith('include')]
+        includes = list(set([x for x in lines if x.startswith('include')]))
         for include in includes:
             fileName = include.split(" ",1)[1]
             newLines = []
