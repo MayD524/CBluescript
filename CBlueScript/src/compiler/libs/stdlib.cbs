@@ -4,3 +4,9 @@ label size
     push %size.varSize
     free %size.varSize
     ret
+
+label println
+    pop println.stringToPrint
+    out %println.stringToPrint
+    out \n
+    ret

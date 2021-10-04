@@ -44,8 +44,6 @@ class bs_memory
 
     public:
         bool constFlag = false;
-        bool eqlFlag = false;
-        bool grtFlag = false;
 
         map<string, bsMemoryObject> bsMemory;
         map<string, long> labelLocations;

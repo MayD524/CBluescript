@@ -1,0 +1,55 @@
+{
+	"$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+	"name": "BlueScript",
+	"patterns": [
+		{
+			"include": "#keywords"
+		},
+		{
+			"include": "#strings"
+		},
+		{
+			"include": "#comments"
+		},
+		{
+			"include": "#functions"
+		}
+	],
+	"repository": {
+		"keywords": {
+			"patterns": [{
+				"name": "keyword.control.bs",
+				"match": "\\b(if|while|return|include|else)\\b"
+			},
+			{
+				"name" : "constant.character",
+				"match" : "\\b(function|const)\\b"
+			}	
+		]
+		},
+		"strings": {
+			"name": "string.quoted.double.bs",
+			"begin": "\"",
+			"end": "\"",
+			"patterns": [
+				{
+					"name": "constant.character.escape.bs",
+					"match": "\\\\."
+				}
+			]
+		},
+		"comments" : {
+			"name" : "comment.line.double-slash",
+			"begin": "//",
+			"end": "\n"
+		},
+		"functions" : {
+			"patterns": [{
+				"name" : "support.function",
+				"match": "\\b(input|print)\\b"
+			}]
+
+		}
+	},
+	"scopeName": "source.bs"
+}

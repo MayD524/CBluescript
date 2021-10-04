@@ -122,6 +122,15 @@ bool anyInVector(const lookType& lookfor, const vector<lookType>& lookIn)
     return false;
 }
 
+bool replace(string& str, const string& from, const string& to)
+{
+    size_t start_pos = str.find(from);
+    if (start_pos == string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
 string toLower( const string inpt)
 {
     locale loc;

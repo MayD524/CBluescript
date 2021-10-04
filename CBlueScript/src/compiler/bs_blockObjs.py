@@ -128,7 +128,7 @@ class bsWhileObj(bsBlockObjects):
             cmp %<ptr1>,%<ptr2>
             {jump} {start of while}
         """
-        self.logicComp(self.line)
+        self.logicComp(self.line, False)
         self.compiler.parsedLines.append(self.cmpLine)
         self.compiler.parsedLines.append(f"{self.logicMode} {self.blockName} ; jump to head if we can continue iterating")
     

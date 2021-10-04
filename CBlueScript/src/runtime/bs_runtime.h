@@ -23,6 +23,8 @@ private:
 
     // we don't want this to be negative
     // allows for 2^64 lines (hopefully more then enough)
+    vector<bool> eqlFlags = {false};
+    vector<bool> grtFlags = {false};
     unsigned long program_counter = 0;
     unsigned long max_program_lines = 0;
     vector<unsigned long> func_returns;
@@ -46,6 +48,9 @@ private:
 
     void run_jmp( string label )
     {
+        this->eqlFlags.pop_back();
+        this->eqlFlags.pop_back();
+
         auto it = this->memoryObject.labelLocations.find(label);
 
         if (it != this->memoryObject.labelLocations.end())
@@ -55,11 +60,8 @@ private:
         {
             printf("Label %s does not exist (line : %li)", label.c_str(), this->program_counter);
             this->canRun = false;
-            return;
         }
 
-        this->memoryObject.eqlFlag = false;
-        this->memoryObject.grtFlag = false;
     }
 
 
@@ -83,10 +85,8 @@ public:
                 cout << this->memoryObject.getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
             }
             cout << "\n\nFlags:\n";
-            cout << "Eql Flag:" << this->memoryObject.eqlFlag << endl;
-            cout << "Grt Flag:" << this->memoryObject.grtFlag << endl;
-            string dummy;
-            getline(cin, dummy);
+            cout << "Eql Flag:" << this->eqlFlags.back() << endl;
+            cout << "Grt Flag:" << this->grtFlags.back() << endl;
         }
         //debug(cmd);
         switch (cmd)
@@ -152,13 +152,18 @@ public:
 
             case 344: // out (print)
             {
+                string printString;
                 if (cmd_args.rfind("%", 0) == 0)
                 {
                     bsMemoryObject mem = this->memoryObject.getVar(split(cmd_args, "%")[1]);
-                    cout << this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj) << endl;
+                    printString = this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj);
                 }
                 else
-                    cout << cmd_args << endl;
+                    printString = cmd_args;
+                replace(printString, "\\n", "\n");
+
+                cout << printString;
+
                 break;
             }
 
@@ -200,79 +205,84 @@ public:
                 else
                     tailVar = this->memoryObject.createObject(split(cmdSplit[1], "%")[1]);
 
-                if (this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj).compare(this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, tailVar.obj)))
-                    this->memoryObject.eqlFlag = true;
+                if (this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj) == this->memoryObject.getStringReperOfVariable(tailVar.isObjectOf, tailVar.obj))
+                    this->eqlFlags.push_back(true);
 
                 else
+                    this->eqlFlags.push_back(false);
+                
+                if (headVar.isObjectOf == BS_Num && tailVar.isObjectOf == BS_Num)
                 {
-                    if (headVar.isObjectOf == BS_Num && tailVar.isObjectOf == BS_Num)
+                    BS_NumType headVarNum = any_cast<BS_NumType>(headVar.obj);
+                    BS_NumType tailVarNum = any_cast<BS_NumType>(tailVar.obj);
+                    if (headVarNum.isFloat() || tailVarNum.isFloat())
                     {
-                        BS_NumType headVarNum = any_cast<BS_NumType>(headVar.obj);
-                        BS_NumType tailVarNum = any_cast<BS_NumType>(tailVar.obj);
-                        if (headVarNum.isFloat() || tailVarNum.isFloat())
-                        {
-                            if(headVarNum.getValue<float>() > tailVarNum.getValue<float>())
-                                this->memoryObject.grtFlag = true;
-                        }
+                        if(headVarNum.getValue<float>() > tailVarNum.getValue<float>())
+                            this->grtFlags.push_back(true);
                         else
-                        {
-                            if(headVarNum.getValue<long>() > tailVarNum.getValue<long>())
-                                this->memoryObject.grtFlag = true;
-                        }
+                            this->grtFlags.push_back(false);
+                    }
+                    else
+                    {
+                        if(headVarNum.getValue<long>() > tailVarNum.getValue<long>())
+                            this->grtFlags.push_back(true);
+                        else
+                            this->grtFlags.push_back(false);
                     }
                 }
+                
 
                 break;
             }
 
             case 310: // jge
             {
-                if (this->memoryObject.eqlFlag == true || this->memoryObject.grtFlag == true)
+                if (this->eqlFlags.back() == true || this->grtFlags.back() == true)
                 {
-                    run_jmp(cmd_args);
+                    this->run_jmp(cmd_args);
                 }
                 break;
             }
 
             case 319: // jng
             {
-                if (this->memoryObject.grtFlag == false)
+                if (this->grtFlags.back() == false)
                 {
-                    run_jmp(cmd_args);
+                    this->run_jmp(cmd_args);
                 }
                 break;
             }
 
             case 209: // jg
             {
-                if (this->memoryObject.grtFlag == true)
+                if (this->grtFlags.back() == true)
                 {
-                    run_jmp(cmd_args);
+                    this->run_jmp(cmd_args);
                 }
                 break;
             }
 
             case 317: // jne
             {
-                if (this->memoryObject.eqlFlag == false)
+                if (this->eqlFlags.back() == false)
                 {
-                    run_jmp(cmd_args);
+                    this->run_jmp(cmd_args);
                 }
                 break;
             }
 
             case 207: // je
             {
-                if (this->memoryObject.eqlFlag == true)
+                if (this->eqlFlags.back() == true)
                 {
-                    run_jmp(cmd_args);
+                    this->run_jmp(cmd_args);
                 }
                 break;
             }
 
             case 327: // jmp
             {
-                run_jmp(cmd_args);
+                this->run_jmp(cmd_args);
                 break;
             }
 
@@ -419,7 +429,8 @@ public:
         while (this->program_counter < this->max_program_lines && this->canRun == true)
         {
             string current_line = this->program_lines[this->program_counter];
-            #ifdef BLUE_SCRIPT_STEPTHROUGH
+            if (this->debugEnabled == true)
+            {
                 string dummy;
                 //this->memoryObject.getAllKeys();
                 cout << "Line Number: " << this->program_counter << endl;
@@ -427,10 +438,8 @@ public:
                 if (this->program_counter + 1 < this->max_program_lines)
                     cout << "Next: " << this->program_counter + 1 << ":" << this->program_lines[this->program_counter+1];
                 cout << current_line << endl;
-                #ifndef BS_AUTOWALK
-                    getline(cin, dummy);
-                #endif
-            #endif
+                getline(cin, dummy);
+            }
 
 
             vector<string> lineSplit = split(current_line, " ", true);

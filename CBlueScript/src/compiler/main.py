@@ -21,14 +21,15 @@ class bsCompiler:
         self.blocks = []
         
         self.keyWords = [
+            ## they all have spaces for parsing 
             "if", 
             "else",
             "function",
             "while",
-            "print",
+            "Print",
             "input",
             "return",
-            "free"
+            "free"        
         ]
         
         self.mathOpers = ["*", "/", "+", "-"]
@@ -50,6 +51,19 @@ class bsCompiler:
             
         return False
 
+    def splitForFuncArgs( self, string:str ) -> list:
+        returnList = []
+        inString = False
+        currentString = ""
+        for char in string:
+            if char == "," and not inString:
+                returnList.append(currentString)
+                currentString = ""
+            else:
+                if char == "\"": inString = not inString; continue
+                currentString += char
+        returnList.append(currentString)
+        return [x.strip() for x in returnList]
     
     def gen_tmpVars( self ) -> str:
         var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";", '2')
@@ -99,7 +113,7 @@ class bsCompiler:
             ## is a function
             funcParse = lineSplit[1].replace(")", '').split("(")
             funcName = funcParse[0].strip() ## the name of the function we want to call
-            funcArgs = [x.strip() for x in funcParse[1].split(",")] ## get args (in order)
+            funcArgs = self.splitForFuncArgs(lineSplit[1]) ## get args (in order)
 
             if funcName in self.declairedVars.keys():
                 ## the function exits!
@@ -170,6 +184,7 @@ class bsCompiler:
         ## do includes before main compile & functions
         while self.lineNo != len(self.filelines):
             currentLine = self.filelines[self.lineNo].rsplit("//", 1)[0].strip()
+            
             if "=" in currentLine and currentLine.split(' ',1)[0] not in self.keyWords:
                 ## variable delic
                 self.parseVarAssign(currentLine)
@@ -177,11 +192,14 @@ class bsCompiler:
             elif any(currentLine.startswith(keyword) for keyword in self.keyWords):
                 ## check for key words
                 splitLine = currentLine.split(' ', 1)
-                if splitLine[0] == "print":
+                if splitLine[0] == "Print":
+                    
                     if self.check_exists(splitLine[1]):
                         splitLine[1] = f"%{self.curScope[-1]}.{splitLine[1]}"
                     else:
                         tvar = self.gen_tmpVars()
+                        if "\"" in splitLine[1]:
+                            splitLine[1] =  splitLine[1].replace("\"", "")
                         self.parsedLines.append(f"mov {self.curScope[-1]}.{tvar},{splitLine[1]}")
                         splitLine[1] = f"%{self.curScope[-1]}.{tvar}"
                     self.parsedLines.append(f"out {splitLine[1]}")
@@ -242,14 +260,12 @@ class bsCompiler:
                     self.blocks.append(tmpFuncObj)
 
             elif "(" in currentLine:
+                
                 ## function calls
                 lineSplit = currentLine.replace(")","").split("(")
-                funcArgs = lineSplit[1].split(',')
+                funcArgs = self.splitForFuncArgs(lineSplit[1]) #lineSplit[1].split(',')
                 for arg in funcArgs:
-                    if arg not in self.declairedVars:
-                        self.parsedLines.append(f"push %{self.curScope[-1]}.{arg}")
-                    else:
-                        self.parsedLines.append(f"push %{self.curScope[-1]}.{arg}")
+                    self.parsedLines.append(f"push %{self.curScope[-1]}.{arg}" if self.check_exists(arg) else f"push {arg}")
                 self.parsedLines.append(f"call {lineSplit[0]}")
                     
             ## jump to eof when this line is ran
@@ -262,7 +278,6 @@ class bsCompiler:
                     self.blocks[-1].block_end()
                     self.blocks.pop()
                     tmpElseBlock.block_start()
-                    self.curScope.pop()
                     self.blocks.append(tmpElseBlock)
                 
                 else:
