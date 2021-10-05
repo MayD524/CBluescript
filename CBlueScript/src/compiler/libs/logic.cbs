@@ -56,3 +56,11 @@ label or
     free %or.cmp1
     free %or.true 
     ret
+
+label nor
+    ; we can assume that everything will already be on the stack
+    call or
+    call not
+    ; the return of the not will be pushed
+    ret
+

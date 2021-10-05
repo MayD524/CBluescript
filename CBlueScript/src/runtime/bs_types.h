@@ -25,6 +25,7 @@ enum Types {
     BS_Num,
     BS_Bool,
     BS_Bytes,
+    BS_Array,
     BS_NULL,
     BS_Obj
 };

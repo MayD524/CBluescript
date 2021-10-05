@@ -1,4 +1,10 @@
 jmp main
+;------------------------------
+; Author: May Draskovics
+; Date: 10/5/2021
+; name: stdlib.cbs
+; Bluescript standard library
+;------------------------------
 label size
 pop size.lookAt
 sizeof size.varSize,%size.lookAt
@@ -33,67 +39,73 @@ free %getIndex.index
 free %getIndex.getIndexOf
 free %getIndex.retOfIndex
 ret
-label and
-pop and.cmp2
-pop and.cmp1
-cmp %and.cmp1,%and.cmp2
-jne not_and
-push 1
-free %and.cmp1
-free %and.cmp2
+;------------------------------
+; Author: May Draskovics
+; Date: 10/5/2021
+; name: arraylib.cbs
+; Bluescript arrays
+;------------------------------
+; create a new array
+; makeArray(arrayname, size)
+label makeArray
+pop makeArray.arraySize
+pop makeArray.arrayName
+array_make %makeArray.arrayName,%makeArray.arraySize
+push %makeArray.arrayName
+free %makeArray.arrayName
+free %makeArray.arraySize
 ret
-label not_and
+; get a value from an array
+; arrayGet(arrayname, index)
+label arrayGet
+pop arrayGet.arrayIndex
+pop arrayGet.arrayName
+array_get tmpObj,%arrayGet.arrayName[%arrayGet.arrayIndex]
+push %tmpObj
+free %tmpObj
+free %arrayGet.arrayIndex
+free %arrayGet.arrayName
+ret
+; append to an array
+; append(arrayname, index, value)
+label append
+pop append.value
+pop append.index
+pop append.arrayname
+array_set %append.arrayname[%append.index],%append.value
 push 0
-free %and.cmp1
-free %and.cmp2
-ret ; return from and
-label not
-pop not.arg1
-mov not.true,1
-cmp %not.arg1,%not.true
-jne not_end
-push 0
-free %not.true
-free %not.arg1
-ret
-label not_end
-push 1
-free %not.true
-free %not.arg1
-ret ; return from not
-label or
-pop or.cmp2
-pop or.cmp1
-mov or.true,1
-cmp %or.cmp1,%or.true
-jne cmp1_notTrue
-push 1
-free %or.cmp2
-free %or.cmp1
-free %or.true
-ret
-label cmp1_notTrue
-cmp %or.cmp2,%or.true
-jne cmp2_notTrue
-push 1
-free %or.cmp2
-free %or.cmp1
-free %or.true
-ret
-label cmp2_notTrue
-push 0
-free %or.cmp2
-free %or.cmp1
-free %or.true
+free %append.value
+free %append.index
+free %append.arrayname
 ret
 label main ; start of function
-mov main.a,1
-mov main.b,0
-push %main.a
+push test
+push 2
+call makeArray
+pop main.x
+push test2
+push 2
+call makeArray
+pop main.b
+push %main.x
+push 0
+push test
+call append
 push %main.b
-call and
+push 0
+push test2
+call append
+push %main.x
+push 0
+call arrayGet
 pop main.c
+push %main.b
+push 0
+call arrayGet
+pop main.d
 push %main.c
+call println
+push %main.d
 call println
 jmp EOF_BS_JMP_POINT
 label EOF_BS_JMP_POINT

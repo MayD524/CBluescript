@@ -86,6 +86,8 @@ public:
             {
                 cout << this->memoryObject.getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
             }
+            cout << "\n\nArray Stack:\n";
+            this->memoryObject.displayArray();
             cout << "\n\nFlags:\n";
             cout << "Eql Flag:" << this->eqlFlags.back() << endl;
             cout << "Grt Flag:" << this->grtFlags.back() << endl;
@@ -153,7 +155,7 @@ public:
                     {
                         case BS_String:
                         {
-                            BS_StringTygetTypepe str = this->memoryObject.returnAsType<BS_StringType>(lookfor.obj);
+                            BS_StringType str = this->memoryObject.returnAsType<BS_StringType>(lookfor.obj);
                             BS_CharType stringChar = str.getChar(getIndex);
                             this->memoryObject.bsMovCmd(argSplit[0], stringChar.__str__());
                             break;
@@ -193,6 +195,91 @@ public:
                     exit(20);
                 }
                 
+                break;
+            }
+
+            case 1052: // array_make <array name>,<array size>
+            {
+                vector<string> splitArgs = split(cmd_args, ",");
+                string arrayName;
+                int arraySize;
+
+                if (splitArgs[0].rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arrayNameObj = this->memoryObject.getVar(split(splitArgs[0], "%")[1]);
+                    arrayName = this->memoryObject.getStringReperOfVariable(arrayNameObj.isObjectOf, arrayNameObj.obj);
+                }
+                else
+                    arrayName = splitArgs[0];
+
+                if (splitArgs[1].rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arraySizeObj = this->memoryObject.getVar(split(splitArgs[1], "%")[1]);
+                    arraySize = stoi(this->memoryObject.getStringReperOfVariable(arraySizeObj.isObjectOf, arraySizeObj.obj));
+                }
+                else
+                    arraySize = stoi(splitArgs[1]);
+
+                this->memoryObject.createArray(arrayName, arraySize);
+                
+                break;
+            }
+
+            case 958: // array_get <outVar>,<array>[<index>]
+            {
+                vector<string> splitArgs = split(cmd_args, ",");
+                vector<string> arrayNameIndex = split(splitArgs[1], "[");
+                string outVar = splitArgs[0];
+                string arrayName = arrayNameIndex[0];
+                string arrayIndex = split(arrayNameIndex[1], "]")[0];
+
+                if (arrayName.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arrNameObj = this->memoryObject.getVar(split(arrayName, "%")[1]);
+                    arrayName = this->memoryObject.getStringReperOfVariable(arrNameObj.isObjectOf, arrNameObj.obj);
+                }
+
+                if (arrayIndex.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arrIndexObj = this->memoryObject.getVar(split(arrayIndex, "%")[1]);
+                    arrayIndex = this->memoryObject.getStringReperOfVariable(arrIndexObj.isObjectOf, arrIndexObj.obj);
+                }
+
+                bsMemoryObject arrayGet = this->memoryObject.getFromArray(arrayName, stoi(arrayIndex));
+
+                this->memoryObject.putObjInMemory(outVar, arrayGet);
+
+                break;
+            }
+
+            case 970: // array_set
+            {
+                vector<string> splitArgs = split(cmd_args, ",");
+                vector<string> arrayNameIndex = split(splitArgs[0], "[");
+                string InData = splitArgs[1];
+                string arrayName = arrayNameIndex[0];
+                string arrayIndex = split(arrayNameIndex[1], "]")[0];
+
+                if (InData.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject indataObj = this->memoryObject.getVar(split(InData, "%")[1]);
+                    InData = this->memoryObject.getStringReperOfVariable(indataObj.isObjectOf, indataObj.obj);
+                }
+
+                if (arrayName.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arrayNameObj = this->memoryObject.getVar(split(arrayName, "%")[1]);
+                    arrayName = this->memoryObject.getStringReperOfVariable(arrayNameObj.isObjectOf, arrayNameObj.obj);
+
+                }
+
+                if (arrayIndex.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject arrayIndexObj = this->memoryObject.getVar(split(arrayIndex, "%")[1]);
+                    arrayIndex = this->memoryObject.getStringReperOfVariable(arrayIndexObj.isObjectOf, arrayIndexObj.obj);
+                }
+                this->memoryObject.arrayAppend(arrayName, stoi(arrayIndex), this->memoryObject.createObject(InData));
+
                 break;
             }
 

@@ -1,3 +1,10 @@
+;------------------------------
+; Author: May Draskovics
+; Date: 10/5/2021
+; name: stdlib.cbs
+; Bluescript standard library
+;------------------------------
+
 label size
     pop size.lookAt
     sizeof size.varSize,%size.lookAt

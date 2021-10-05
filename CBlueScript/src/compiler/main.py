@@ -3,7 +3,7 @@
     Date: 9/23/2021
     version: 1.3.0b
 """
-from UPL.Core import currentDir, file_manager as fm
+from UPL.Core import file_manager as fm
 from UPL.Core import generate_code
 import bs_blockObjs
 import sys

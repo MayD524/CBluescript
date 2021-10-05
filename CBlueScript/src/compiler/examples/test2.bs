@@ -1,9 +1,16 @@
-include libs/logic.cbs
 include libs/stdlib.cbs
+include libs/arraylib.cbs
 function main()
 {
-    a = 1
-    b = 0
-    c = and(a, b)
+    x = makeArray("test", 2)
+    b = makeArray("test2", 2)
+
+    append(x, 0, "test")
+    append(b, 0, "test2")
+
+    c = arrayGet(x, 0)
+    d = arrayGet(b, 0)
+
     println(c)
+    println(d)
 }

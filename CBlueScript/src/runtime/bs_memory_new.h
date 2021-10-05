@@ -42,12 +42,20 @@ class bs_memory
             return nll;
         }
 
+        struct ArrayLocs 
+        { 
+            int start;
+            int end;
+        };
+
     public:
         bool constFlag = false;
 
         map<string, bsMemoryObject> bsMemory;
         map<string, long> labelLocations;
+        map<string, ArrayLocs> bsArraySizes; 
 
+        vector<bsMemoryObject> arrayStack;
         vector<bsMemoryObject> bsStack;
 
         bs_memory() = default;
@@ -103,6 +111,78 @@ class bs_memory
         T returnAsType ( any _value )
         {
             return any_cast<T>(_value);
+        }
+
+        void displayArray ( void )
+        {
+            for (bsMemoryObject& o : this->arrayStack)
+            {
+                cout << this->getStringReperOfVariable(o.isObjectOf, o.obj) << endl;
+            }
+        }
+
+        void createArray( const string& arrayName, const int& arraySize )
+        {
+            ArrayLocs newArray;
+
+            newArray.start = this->arrayStack.size();
+            newArray.end = newArray.start + arraySize;
+            // init the array
+            for (int i = 0; i < arraySize; i++)
+            {
+                this->arrayStack.push_back(this->nullObj());
+            }
+            this->bsArraySizes.insert({ arrayName, newArray });
+        }
+
+        int indexInArray( const string& arrayName, int index)
+        {
+            auto it = this->bsArraySizes.find(arrayName);
+        
+            if (it == this->bsArraySizes.end())
+            {
+                cout << "Array does not exist" << endl;
+                exit(23);
+                return -1;
+            }
+
+            ArrayLocs locs = it->second;
+            index += locs.start;
+            if (index >= locs.start && index <= locs.end)
+            {
+                // append the value
+                return index;             
+            }
+            return index;
+        }
+
+        void arrayAppend( const string& arrayName,  int index, const bsMemoryObject& obj )
+        {
+            index = this->indexInArray(arrayName, index);
+            if (index > -1)
+            {
+                this->arrayStack[index] = obj;
+                return;
+            }
+            cout << "Out of range error" << endl;
+            exit(21);
+
+        }
+
+        bsMemoryObject getFromArray( const string& arrayName, int index)
+        {
+            index = this->indexInArray(arrayName, index);
+            if (index > -1)
+            {
+                return this->arrayStack[index];
+            }
+
+            cout << "Out of range error" << endl;
+            exit(21);
+
+            // just so c++ can compile
+            return this->nullObj();
+
         }
 
         bsMemoryObject runMath( const string& line, const int bsMathOper )
@@ -286,33 +366,33 @@ class bs_memory
             }
         }
 
-    void putObjInMemory( string _ptrname, bsMemoryObject _data )
-    {
-        if (this->varExists(_ptrname))
+        void putObjInMemory( string _ptrname, bsMemoryObject _data )
         {
-            if ( this->getVar(_ptrname).isConst == true)
+            if (this->varExists(_ptrname))
             {
-                cout << "Cannot change an immutable variable" << endl;
-                exit(1);
+                if ( this->getVar(_ptrname).isConst == true)
+                {
+                    cout << "Cannot change an immutable variable" << endl;
+                    exit(1);
+                }
+                else
+                    this->bsMemory.erase(_ptrname);
             }
-            else
-                this->bsMemory.erase(_ptrname);
+
+            this->bsMemory.insert({ _ptrname, _data });
+            return;
         }
 
-        this->bsMemory.insert({ _ptrname, _data });
-        return;
-    }
-
-    void bsMovCmd( string _ptrname, string _value )
-    {
-        bsMemoryObject memObject;
-        if (_value.rfind("%", 0) == 0)
-            memObject = this->getVar(split(_value, "%")[1]);
-        else
-            memObject = this->createObject(_value);
-        
-        this->putObjInMemory( _ptrname, memObject );
-    }
+        void bsMovCmd( string _ptrname, string _value )
+        {
+            bsMemoryObject memObject;
+            if (_value.rfind("%", 0) == 0)
+                memObject = this->getVar(split(_value, "%")[1]);
+            else
+                memObject = this->createObject(_value);
+            
+            this->putObjInMemory( _ptrname, memObject );
+        }
 
 };
 
