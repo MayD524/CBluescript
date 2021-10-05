@@ -73,6 +73,8 @@ public:
         this->debugEnabled = debugEnabled;
     }
 
+    ~bs_runtime ( void ) = default;
+
     int run_cmd( int cmd, string cmd_args )
     {
         if (this->debugEnabled)
@@ -124,6 +126,49 @@ public:
                     cout << "Variable " << argSplit[1] << " does not exist or hasn't been defined.\n";
                     return 1;
                 }
+                break;
+            }
+
+            case 536: // index <return ptr>,<var ptr>[<index>]
+            {
+                vector<string> argSplit = split(cmd_args, ",", true);
+                vector<string> varNameAndIndex = split(argSplit[1], "["); // get the index
+                string index = split(varNameAndIndex[1], "]")[0];
+                long getIndex = 0;
+
+                if (index.rfind("%", 0) == 0)
+                {
+                    bsMemoryObject indexObj = this->memoryObject.getVar(split(index, "%")[1]);
+                    getIndex = stol(this->memoryObject.getStringReperOfVariable(indexObj.isObjectOf, indexObj.obj));
+                }
+                else
+                {
+                    getIndex = stol(index);
+                }
+
+                if (varNameAndIndex[0].rfind("%", 0) == 0)
+                {
+                    bsMemoryObject lookfor = this->memoryObject.getVar(split(varNameAndIndex[0], "%")[1]);
+                    switch (lookfor.isObjectOf)
+                    {
+                        case BS_String:
+                        {
+                            BS_StringTygetTypepe str = this->memoryObject.returnAsType<BS_StringType>(lookfor.obj);
+                            BS_CharType stringChar = str.getChar(getIndex);
+                            this->memoryObject.bsMovCmd(argSplit[0], stringChar.__str__());
+                            break;
+                        }
+                        case BS_Bytes:
+                        {
+                            BS_BytesType bsByte = this->memoryObject.returnAsType<BS_BytesType>(lookfor.obj);
+                            BS_NumType bsNum = BS_NumType();
+                            bsNum.setValue(to_string(bsByte.getBitAtIndex(getIndex)));
+                            this->memoryObject.bsMovCmd(argSplit[0], bsNum.__str__());
+                            break;
+                        }
+                    }
+                }
+
                 break;
             }
 

@@ -24,6 +24,7 @@ enum Types {
     BS_Char,
     BS_Num,
     BS_Bool,
+    BS_Bytes,
     BS_NULL,
     BS_Obj
 };
@@ -69,6 +70,48 @@ class BS_GenericObject
         void setValue ( string value ) { }
         int __size__ ( void ) { return this->stringRepSize; }
         string __str__ ( void ) { return this->stringRepOfValue;}
+};
+
+class BS_BytesType: public BS_GenericObject
+{
+
+    public:
+        vector<int> binArray;
+
+        Types getType() { return BS_Bytes; }
+
+        void setValue( string value )
+        {
+            this->stringRepOfValue = value;
+            this->stringRepSize = value.size();
+            for ( int i = 0; i < value.size(); i++)
+            {
+                if (value[i] == '1')
+                    this->binArray.push_back(1);
+                
+                else
+                    this->binArray.push_back(0);
+            }
+        }
+        void printBinArray( void )
+        {
+            for (const int& i : this->binArray)
+            {
+                cout << i;
+            }
+            cout << endl;
+        }
+
+        int getBitAtIndex( int index )
+        {
+            if (index < this->binArray.size())
+                return this->binArray[index];
+            return 0;
+        }
+
+        int __size__ ( void ) { return this->stringRepSize; }
+        string __str__( void ) { return this->stringRepOfValue; }
+
 };
 
 class BS_NullType: public BS_GenericObject

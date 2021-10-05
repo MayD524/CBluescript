@@ -63,6 +63,9 @@ class bs_memory
             
             else if (_value == "NULL")
                 return BS_NULL;
+
+            else if (_value.rfind("0b", 0) == 0)
+                return BS_Bytes;
             
             else
                 return BS_String;
@@ -182,6 +185,10 @@ class bs_memory
                 {
                     return this->returnAsType<BS_NumType>(obj).__str__();
                 }
+                case BS_Bytes:
+                {
+                    return this->returnAsType<BS_BytesType>(obj).__str__();
+                }
                 default:
                 {
                     return "NULL";
@@ -250,6 +257,18 @@ class bs_memory
                     this->constFlag = false;
                     return newObj;
                 }
+                case BS_Bytes:
+                {
+                    BS_BytesType byteVar = BS_BytesType();
+                    _value = split(_value, "0b")[1];
+                    byteVar.setValue(_value);
+                    newObj.isConst = this->constFlag;
+                    newObj.isObjectOf = BS_Bytes;
+                    newObj.obj = byteVar;
+                    this->constFlag = false;
+                    return newObj;
+                }
+
                 case BS_String:
                 {
                     BS_StringType stringVar = BS_StringType();

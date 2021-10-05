@@ -1,0 +1,58 @@
+label and
+    pop and.cmp2
+    pop and.cmp1
+    cmp %and.cmp1,%and.cmp2
+    jne not_and
+        push 1
+        free %and.cmp1
+        free %and.cmp2
+        ret  
+    label not_and
+        push 0
+    free %and.cmp1
+    free %and.cmp2
+    ret ; return from and
+
+label not
+    pop not.arg1
+    mov not.true,1
+    cmp %not.arg1,%not.true
+    jne not_end
+        push 0
+        free %not.true
+        free %not.arg1
+        ret
+    label not_end
+        push 1
+
+    free %not.true
+    free %not.arg1
+    ret ; return from not
+
+label or
+    pop or.cmp2
+    pop or.cmp1
+    mov or.true,1
+    cmp %or.cmp1,%or.true
+    jne cmp1_notTrue
+        push 1
+        free %or.cmp2
+        free %or.cmp1
+        free %or.true 
+        ret
+    label cmp1_notTrue
+    cmp %or.cmp2,%or.true
+    jne cmp2_notTrue
+        push 1
+        free %or.cmp2
+        free %or.cmp1
+        free %or.true 
+        ret
+        
+    label cmp2_notTrue
+
+    push 0
+    free %or.cmp2
+    free %or.cmp1
+    free %or.true 
+    ret

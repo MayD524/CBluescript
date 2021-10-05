@@ -1,10 +1,11 @@
 """
     Author: May Draskovics
     Date: 9/23/2021
-    version: 1.0.0
+    version: 1.3.0b
 """
+from UPL.Core import currentDir, file_manager as fm
+from UPL.Core import generate_code
 import bs_blockObjs
-import UPL
 import sys
 
 class bsCompiler:
@@ -66,10 +67,10 @@ class bsCompiler:
         return [x.strip() for x in returnList]
     
     def gen_tmpVars( self ) -> str:
-        var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";", '2')
+        var = generate_code(7).replace(',', '!').replace("%", "1").replace(";", '2')
         ## should stop from duplicates happening
         while var in self.declairedVars.keys():
-            var = UPL.Core.generate_code(7).replace(',', '!').replace("%", "1").replace(";","2")
+            var = generate_code(7).replace(',', '!').replace("%", "1").replace(";","2")
 
         return var
 
@@ -113,7 +114,7 @@ class bsCompiler:
             ## is a function
             funcParse = lineSplit[1].replace(")", '').split("(")
             funcName = funcParse[0].strip() ## the name of the function we want to call
-            funcArgs = self.splitForFuncArgs(lineSplit[1]) ## get args (in order)
+            funcArgs = self.splitForFuncArgs(funcParse[1]) ## get args (in order)
 
             if funcName in self.declairedVars.keys():
                 ## the function exits!
@@ -154,10 +155,10 @@ class bsCompiler:
             self.parsedLines.append(f"mov {self.curScope[-1]}.{varName},{varExpress}")
     
     def preCompiledHandle( self, lines:list ) -> None:
-        labels = [ x for x in lines if x.startswith('label')]
+        labels = [ x.rsplit(';',1)[0] for x in lines if x.startswith('label')]
         
         for label in labels:
-            labelName = label.split(' ',1)[1]
+            labelName = label.split(' ',1)[1].strip()
             self.declairedVars[labelName] = 'function'
     
     def handle_includes( self, lines:list ) -> None:
@@ -166,18 +167,17 @@ class bsCompiler:
             fileName = include.split(" ",1)[1]
             newLines = []
             if not fileName.endswith(".cbs"):
-                newLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
+                newLines = [x.strip() for x in fm.clean_read(fileName)]
                 self.handle_includes(newLines)
                 self.filelines = newLines + self.filelines
 
             else:
-                newPreParsedLines = [x.strip() for x in UPL.Core.file_manager.clean_read(fileName)]
+                newPreParsedLines = [x.strip() for x in fm.clean_read(fileName)]
                 self.parsedLines += newPreParsedLines
                 self.preCompiledHandle(newPreParsedLines)
-
             
-            
-            self.filelines.remove(include)
+            if include in self.filelines:
+                self.filelines.remove(include)
 
     def compileLines( self ) -> None:
         self.handle_includes(self.filelines) ## deal with includes
@@ -260,7 +260,6 @@ class bsCompiler:
                     self.blocks.append(tmpFuncObj)
 
             elif "(" in currentLine:
-                
                 ## function calls
                 lineSplit = currentLine.replace(")","").split("(")
                 funcArgs = self.splitForFuncArgs(lineSplit[1]) #lineSplit[1].split(',')
@@ -294,14 +293,14 @@ class bsCompiler:
 
 
 def main( filename:str ) -> None:
-    fileLines = UPL.Core.file_manager.clean_read(filename)
+    fileLines = fm.clean_read(filename)
     fileLines = [x.rsplit('//')[0].strip() for x in fileLines]
     compiler = bsCompiler(filename, fileLines)
     compiler.compileLines()
 
     writeFile = filename.replace(".bs", ".cbs")
     with open(writeFile, "w+"): pass
-    UPL.Core.file_manager.write_file(writeFile, "\n".join(compiler.parsedLines))
+    fm.write_file(writeFile, "\n".join(compiler.parsedLines))
 
 
 if __name__ == "__main__":
