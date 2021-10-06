@@ -4,9 +4,6 @@
 */
 
 #define BLUE_SCRIPT
-//#define DEBUG  // for enabling debug
-//#define BLUE_SCRIPT_STEPTHROUGH // enable step through
-//#define BS_AUTOWALK
 
 #include <iostream>
 #include <vector>

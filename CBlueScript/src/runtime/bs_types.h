@@ -17,15 +17,14 @@
 #include <map>
 #include <any>
 
-
 using namespace std;
+
 enum Types {
     BS_String,
     BS_Char,
     BS_Num,
     BS_Bool,
     BS_Bytes,
-    BS_Array,
     BS_NULL,
     BS_Obj
 };

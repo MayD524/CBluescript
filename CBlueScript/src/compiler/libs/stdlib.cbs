@@ -5,6 +5,8 @@
 ; Bluescript standard library
 ;------------------------------
 
+; get the size of an object
+; size(object)
 label size
     pop size.lookAt
     sizeof size.varSize,%size.lookAt
@@ -13,6 +15,8 @@ label size
     free %size.lookAt
     ret
 
+; print a message with a newline
+; println(message)
 label println
     pop println.stringToPrint
     out %println.stringToPrint
@@ -20,12 +24,16 @@ label println
     free %println.stringToPrint
     ret
 
+; print a message without a newline
+; print(message)
 label print
     pop print.string
     out %print.string
     free %print.string
     ret
 
+; gets the type of an object
+; getType(object)
 label getType
     pop getType.obj
     type getType.out,%getType.obj
@@ -34,7 +42,9 @@ label getType
     free %getType.obj
     ret
 
-label getIndex; getIndex(getIndexOf, index)
+; get a value at a given index
+; getIndex(object, index)
+label getIndex
     pop getIndex.index
     pop getIndex.getIndexOf
     index getIndex.retOfIndex,%getIndex.getIndexOf[%getIndex.index]
