@@ -40,7 +40,10 @@ free %getIndex.getIndexOf
 free %getIndex.retOfIndex
 ret
 label main ; start of function
-push hello world
+mov main."*/yM19,10
+add main."*/yM19,1
+mov main.a,%main."*/yM19
+push %main.a
 call println
 jmp EOF_BS_JMP_POINT
 label EOF_BS_JMP_POINT

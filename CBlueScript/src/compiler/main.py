@@ -9,11 +9,12 @@ import bs_blockObjs
 import sys
 
 class bsCompiler:
-    def __init__(self, filename:str, filelines:list) -> None:
+    def __init__(self, filename:str, filelines:list, isLib:bool) -> None:
         self.filename    = filename
         self.filelines   = filelines
-        self.parsedLines = ["jmp main"]
-        self.curScope    = ["main"]
+        self.isLib       = isLib
+        self.parsedLines = ["jmp main"] if not self.isLib else []
+        self.curScope    = ["main"] if not self.isLib else ["generic"]
 
         ## var_name : [var_code, type(func|vartypes|lable)]
         self.declairedVars = {}
@@ -284,18 +285,19 @@ class bsCompiler:
                     self.blocks.pop()
 
             self.lineNo += 1
-        if "main" not in self.declairedVars.keys():
+        if "main" not in self.declairedVars.keys() and not self.isLib:
             raise Exception("No main function declaired")
 
-        self.parsedLines.append("label EOF_BS_JMP_POINT") ## used for exiting later
+        if not self.isLib:
+            self.parsedLines.append("label EOF_BS_JMP_POINT") ## used for exiting later
         #self.parsedLines = [x for x in self.parsedLines if x is not None]
         print('\n'.join(self.parsedLines))
 
 
-def main( filename:str ) -> None:
+def main( filename:str, isLib:bool ) -> None:
     fileLines = fm.clean_read(filename)
     fileLines = [x.rsplit('//')[0].strip() for x in fileLines]
-    compiler = bsCompiler(filename, fileLines)
+    compiler = bsCompiler(filename, fileLines, isLib)
     compiler.compileLines()
 
     writeFile = filename.replace(".bs", ".cbs")
@@ -306,4 +308,5 @@ def main( filename:str ) -> None:
 if __name__ == "__main__":
     if len(sys.argv) > 0:
         filename = sys.argv[1]
-        main(filename)
+        isLib = False if "lib" not in sys.argv else True
+        main(filename, isLib)
