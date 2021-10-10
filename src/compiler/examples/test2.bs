@@ -1,0 +1,8 @@
+include libs/stdlib.cbs
+
+function main()
+{
+    a = 10
+    a += 2
+    println(a)
+}
