@@ -23,7 +23,6 @@ private:
 
     // we don't want this to be negative
     // allows for 2^64 lines (hopefully more then enough)
-    map<string, void(*)(bs_runtime& runtime, string& args)> linkedFuncs;
     vector<bool> eqlFlags = {false};
     vector<bool> grtFlags = {false};
     unsigned long program_counter = 0;
@@ -72,12 +71,11 @@ private:
 
 
 public:
-    bs_runtime(vector<string> lines, bool debugEnabled, map<string, void(*)(bs_runtime& runtime, string& args)> loadedFuncs)
+    bs_runtime(vector<string> lines, bool debugEnabled)
     {
         this->program_lines = lines;
         this->max_program_lines = lines.size();
         this->debugEnabled = debugEnabled;
-        this->linkedFuncs = loadedFuncs;
     }
 
     ~bs_runtime ( void ) = default;
@@ -580,10 +578,7 @@ public:
       
                 break;
             }
-            default:
-            {
-                return 999;
-            }
+        
         }
         return 0; // it worked without error
     }
@@ -604,18 +599,6 @@ public:
         }
     }
     
-    void handle_plugins( const string& cmd_line )
-    {
-        vector<string> splitCmd = split(cmd_line, " ", true);
-        auto it = this->linkedFuncs.find(splitCmd[0]);
-
-        if (it == this->linkedFuncs.end())
-        {
-            return;
-        }
-        it->second(*this, splitCmd[1]);
-    }
-
     void runtimeMain( void )
     {
         this->preRead();
@@ -634,17 +617,13 @@ public:
                 getline(cin, dummy);
             }
 
+
             vector<string> lineSplit = split(current_line, " ", true);
             if( lineSplit.size() == 1)
                 lineSplit.push_back(" ");
             int cmdOut = run_cmd(dumbHash(lineSplit[0]), lineSplit[1]);
 
-            if (cmdOut == 999)
-            {
-                handle_plugins(current_line);
-            }
-
-            else if (cmdOut != 0)
+            if (cmdOut != 0)
             {
                 debug("There was an issue");
                 debug(cmdOut);

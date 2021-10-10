@@ -16,6 +16,13 @@ label makeArray
     free %makeArray.arraySize
     ret
 
+; erase an array from memory
+; eraseArray(arrayname)
+label eraseArray
+    pop eraseArray.name
+    array_erase %eraseArray.name
+    ret
+
 ; get a value from an array
 ; arrayGet(arrayname, index)
 label arrayGet
@@ -28,15 +35,24 @@ label arrayGet
     free %arrayGet.arrayName
     ret
 
+; get size of an array
+; arraySize(arrayname)
+label arraySize
+    pop arraySize.arrayname
+    array_size arraySize.size,%arraySize.arrayname
+    sub arraySize.size,1
+    push %arraySize.size
+    free %arraySize.size
+    free %arraySize.arrayname
+    ret
+
 ; append to an array
 ; append(arrayname, index, value)
 label append
     pop append.value
     pop append.index
     pop append.arrayname
-
     array_set %append.arrayname[%append.index],%append.value
-    push 0
     free %append.value
     free %append.index
     free %append.arrayname

@@ -5,8 +5,59 @@
 ; Bluescript standard library
 ;------------------------------
 
-; get the size of an object
-; size(object)
+; split function
+label split ; start of function
+pop split.delim
+pop split.splitStr
+mov split.index,0
+mov split.arrayIndex,0
+push %split.splitStr
+call size
+pop split.stringSize
+mov split.currentString,
+push splitArray
+push %split.stringSize
+call makeArray
+pop split.splitArray
+label MRo!4C! ; start of while loop
+push %split.splitStr
+push %split.index
+call getIndex
+pop split.char
+mov UBU11c8_isSet,0 ; start of an if block
+cmp %split.char,%split.delim ; if block compairison
+jne end_of_if_UBU11c8 ; jump to end if expression is false
+mov UBU11c8_isSet,1 ; we made it in the if statement
+push %split.splitArray
+push %split.arrayIndex
+push %split.currentString
+call append
+mov split.currentString,
+mov split.-Z/E'Um,%split.arrayIndex
+add split.-Z/E'Um,1
+mov split.arrayIndex,%split.-Z/E'Um
+label end_of_if_UBU11c8 ; end of if
+mov :@K!'MZ,1 ; temp constant
+cmp %UBU11c8_isSet,%:@K!'MZ ; compair the isSet of the previous if block
+je end_of_else_*X2k+fy ; jump if the previous if was true
+mov split.lA|i!hX,%split.currentString
+add split.lA|i!hX,%split.char
+mov split.currentString,%split.lA|i!hX
+label end_of_else_*X2k+fy ; end of else
+mov split.GX>H:\*,%split.index
+add split.GX>H:\*,1
+mov split.index,%split.GX>H:\*
+cmp %split.index,%split.stringSize
+jng MRo!4C! ; jump to head if we can continue iterating
+push %split.splitArray
+push %split.arrayIndex
+push %split.currentString
+call append
+push %split.splitArray
+free %split.splitArray
+ret ; end of function
+ret ; return from function
+
 label size
     pop size.lookAt
     sizeof size.varSize,%size.lookAt
@@ -15,8 +66,6 @@ label size
     free %size.lookAt
     ret
 
-; print a message with a newline
-; println(message)
 label println
     pop println.stringToPrint
     out %println.stringToPrint
@@ -24,16 +73,12 @@ label println
     free %println.stringToPrint
     ret
 
-; print a message without a newline
-; print(message)
 label print
     pop print.string
     out %print.string
     free %print.string
     ret
 
-; gets the type of an object
-; getType(object)
 label getType
     pop getType.obj
     type getType.out,%getType.obj
@@ -42,9 +87,7 @@ label getType
     free %getType.obj
     ret
 
-; get a value at a given index
-; getIndex(object, index)
-label getIndex
+label getIndex; getIndex(getIndexOf, index)
     pop getIndex.index
     pop getIndex.getIndexOf
     index getIndex.retOfIndex,%getIndex.getIndexOf[%getIndex.index]

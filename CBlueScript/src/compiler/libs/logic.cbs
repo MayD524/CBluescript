@@ -1,16 +1,3 @@
-;------------------------------
-; Author: May Draskovics
-; Date: 10/5/2021
-; name: logic.cbs
-; Bluescript logic library
-;------------------------------
-
-; run an and comparison on 2 inputs
-; 0 | 0 = 0
-; 1 | 0 = 0
-; 0 | 1 = 0
-; 1 | 1 = 1
-; and(input1, input2)
 label and
     pop and.cmp2
     pop and.cmp1
@@ -26,10 +13,6 @@ label and
     free %and.cmp2
     ret ; return from and
 
-; run a logicical not operation
-; 0 | 1
-; 1 | 0
-; not(object)
 label not
     pop not.arg1
     mov not.true,1
@@ -46,12 +29,6 @@ label not
     free %not.arg1
     ret ; return from not
 
-; run a logical or operation
-; 0 | 0  = 0
-; 1 | 0  = 1
-; 0 | 1  = 1
-; 1 | 1  = 1
-; or(input1, input2)
 label or
     pop or.cmp2
     pop or.cmp1
@@ -80,12 +57,6 @@ label or
     free %or.true 
     ret
 
-; run a logical nor operation
-; 0 | 0  = 1
-; 1 | 0  = 0
-; 0 | 1  = 0
-; 1 | 1  = 0
-; or(input1, input2)
 label nor
     ; we can assume that everything will already be on the stack
     call or
