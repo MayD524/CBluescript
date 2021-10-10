@@ -1,2 +1,0 @@
-#load_so ./test.so
-hello_world2 test
