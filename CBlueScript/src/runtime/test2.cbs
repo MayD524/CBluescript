@@ -1,2 +1,3 @@
-#load_so ./test.so
-hello_world2 test
+#load_dll test2.dll
+mov a,test
+hello_world2 %a

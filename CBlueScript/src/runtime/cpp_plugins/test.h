@@ -22,8 +22,8 @@ using namespace std;
         extern "C"
         {
     #endif
-        TEST_EXPORTS void __stdcall helloWorld(bs_runtime& runtime, string& args);
-        TEST_EXPORTS void __stdcall load_lib(map<string, void(*)(bs_runtime& runtime, string& args)>* rt);
+        TEST_EXPORTS void __stdcall helloWorld(bs_runtime* runtime, string& args);
+        TEST_EXPORTS void __stdcall load_lib(map<string, void(*)(bs_runtime* runtime, string& args)>* rt);
     #ifdef __cplusplus
         }
     #endif

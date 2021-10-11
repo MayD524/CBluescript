@@ -186,7 +186,7 @@ class BS_BoolType: public BS_GenericObject
 
         void setValue ( string value )
         {
-            if (value.compare("true"))
+            if (value.compare("true") == 0)
                 this->bitState = true;
             else
                 this->bitState = false;

@@ -21,18 +21,6 @@ class bs_runtime
 {
 private:
 
-    // we don't want this to be negative
-    // allows for 2^64 lines (hopefully more then enough)
-    vector<bool> eqlFlags = {false};
-    vector<bool> grtFlags = {false};
-    unsigned long program_counter = 0;
-    unsigned long max_program_lines = 0;
-    vector<unsigned long> func_returns;
-    unsigned long function_return = 0;
-    vector<string> program_lines;
-    bs_memory memoryObject;
-    bool debugEnabled = false;
-    bool canRun = true;
 
     // just convert a string to a sum of all chars in it
     int dumbHash( string str )
@@ -71,6 +59,19 @@ private:
 
 
 public:
+    // we don't want this to be negative
+    // allows for 2^64 lines (hopefully more then enough)
+    vector<bool> eqlFlags = {false};
+    vector<bool> grtFlags = {false};
+    unsigned long program_counter = 0;
+    unsigned long max_program_lines = 0;
+    vector<unsigned long> func_returns;
+    unsigned long function_return = 0;
+    vector<string> program_lines;
+    bs_memory memoryObject;
+    bool debugEnabled = false;
+    bool canRun = true;
+    
     bs_runtime(vector<string> lines, bool debugEnabled)
     {
         this->program_lines = lines;

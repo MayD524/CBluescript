@@ -613,7 +613,7 @@ public:
         {
             return;
         }
-        it->second(*this, splitCmd[1]);
+        it->second(&this, splitCmd[1]);
     }
 
     void runtimeMain( void )
