@@ -1,0 +1,12 @@
+#load_dll bs_math.dll
+
+; get the power of a varibale
+; power(base, exp)
+label power
+    pop power.base
+    pop power.exp
+    pow power.base,power.exp
+    push %power.base
+    free %power.base
+    free %power.exp
+    ret

@@ -15,13 +15,13 @@
 
 using namespace std;
 
-map<string, void(*)(bs_runtime& runtime, string& args)> linkedFuncs;
+map<string, void(*)(bs_memory* mem, const string& args)> linkedFuncs;
 
 #if defined _WIN32
     #define OS "WIN32"
     #include <windows.h>
 
-    typedef void (CALLBACK* LOAD_LIB)(map<string, void(*)(bs_runtime& runtime, string& args)>* rt);
+    typedef void (CALLBACK* LOAD_LIB)(map<string, void(*)(bs_memory* mem, const string& args)>* rt);
 
     HRESULT load_library( const string& path)
     {
@@ -65,7 +65,7 @@ map<string, void(*)(bs_runtime& runtime, string& args)> linkedFuncs;
     #define OS "LINUX"
     //typedef void (CALLBACK* LOAD_LIB)(map<string, void(*)(bs_runtime& runtime, string& args)>* rt);
 
-    typedef void (*LOAD_LIB)(map<string, void(*)(bs_runtime& runtime, string& args)>* rt);
+    typedef void (*LOAD_LIB)(map<string, void(*)(bs_memory* mem, const string& args)>* rt);
 
     void load_library(const string& path)
     {
@@ -122,6 +122,7 @@ int main( int argc, char** argv )
 {
     vector<string> args = argsToVector(argv);
     bool debugEnabled = false;
+    bool autoWalk = false;
     if (argc > 0)
     {
         string fname = string(argv[1]);
@@ -131,9 +132,12 @@ int main( int argc, char** argv )
         if (anyInVector<string>("debug", args))
             debugEnabled = true;
 
+        if (anyInVector<string>("self_walk", args))
+            autoWalk = true;
+        cout << autoWalk << endl;
         getlibs(fData);
 
-        bs_runtime runtime = bs_runtime(fData, debugEnabled, linkedFuncs);
+        bs_runtime runtime = bs_runtime(fData, debugEnabled, linkedFuncs, autoWalk);
 
 
         runtime.runtimeMain();

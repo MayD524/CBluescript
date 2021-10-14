@@ -1,3 +1,10 @@
-#load_dll test2.dll
-mov a,test
-hello_world2 %a
+mov index,0
+set isConst,1
+mov ex,2
+label test
+out %index
+out \n
+add index,%ex
+mov comp,10000
+cmp %index,%comp
+jne test

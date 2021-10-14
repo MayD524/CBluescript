@@ -58,6 +58,16 @@ free %split.splitArray
 ret ; end of function
 ret ; return from function
 
+; for throwing errors
+; throw(error_name)
+label throw
+    ; we already know the string is on stack
+    call println
+    ; this will exit
+    jmp EOF_BS_JMP_POINT
+
+; get the size of an object
+; size(lookAt)
 label size
     pop size.lookAt
     sizeof size.varSize,%size.lookAt
@@ -66,6 +76,8 @@ label size
     free %size.lookAt
     ret
 
+; print a string with newline
+; println(stringToPrint)
 label println
     pop println.stringToPrint
     out %println.stringToPrint
@@ -73,12 +85,28 @@ label println
     free %println.stringToPrint
     ret
 
+; print a string without newline
+; print(string)
 label print
     pop print.string
     out %print.string
     free %print.string
     ret
 
+; get a random number in range
+; random(min, max)
+label random
+    pop random.max
+    pop random.min
+    ; rint pushes to stack so no
+    ; need to use a var
+    rint %random.min,%random.max
+    free %random.min
+    free %random.max
+    ret
+
+; get the type of an object
+; getType(obj)
 label getType
     pop getType.obj
     type getType.out,%getType.obj
@@ -87,7 +115,9 @@ label getType
     free %getType.obj
     ret
 
-label getIndex; getIndex(getIndexOf, index)
+; get the index of a char in a string
+; getIndex(getIndexOf, index)
+label getIndex
     pop getIndex.index
     pop getIndex.getIndexOf
     index getIndex.retOfIndex,%getIndex.getIndexOf[%getIndex.index]
@@ -95,4 +125,23 @@ label getIndex; getIndex(getIndexOf, index)
     free %getIndex.index
     free %getIndex.getIndexOf
     free %getIndex.retOfIndex
+    ret
+
+; read a file
+; read(filename)
+label read
+    pop read.filename
+    read_file fData,%read.filename
+    push %fData
+    free %read.filename
+    ret
+
+; write a file
+; write(filename, array)
+label write
+    pop write.filename
+    pop write.array
+    write_file %write.filename,%write.array
+    free %write.filename
+    free %write.array
     ret

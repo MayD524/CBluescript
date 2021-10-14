@@ -8,12 +8,17 @@
 #define BS_RUNTIME_H
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <string>
+#include <random>
 
 #include "UCPPL/UCPPL.h"
-#include "bs_memory_new.h"
+
+#include "bs_memory.h"
+#include "bs_arrayTools.h"
 #include "bs_defines.h"
+#include "bs_funcs.h"
 
 using namespace std;
 
@@ -23,7 +28,7 @@ private:
 
     // we don't want this to be negative
     // allows for 2^64 lines (hopefully more then enough)
-    map<string, void(*)(bs_runtime& runtime, string& args)> linkedFuncs;
+    map<string, void(*)(bs_memory* mem, const string& args)> linkedFuncs;
     vector<bool> eqlFlags = {false};
     vector<bool> grtFlags = {false};
     unsigned long program_counter = 0;
@@ -33,6 +38,7 @@ private:
     vector<string> program_lines;
     bs_memory memoryObject;
     bool debugEnabled = false;
+    bool autoWalkEnabled = false;
     bool canRun = true;
 
     // just convert a string to a sum of all chars in it
@@ -51,14 +57,15 @@ private:
     {
         if (label.compare("EOF_BS_JMP_POINT") == 0)
         {
-            exit(0);this->canRun = false;
+            cout << "here" << endl;
+            exit(0);
+            this->canRun = false;
             return;
         }
         this->eqlFlags.pop_back();
         this->eqlFlags.pop_back();
 
         auto it = this->memoryObject.labelLocations.find(label);
-
         if (it != this->memoryObject.labelLocations.end())
             this->program_counter = it->second;
 
@@ -72,11 +79,13 @@ private:
 
 
 public:
-    bs_runtime(vector<string> lines, bool debugEnabled, map<string, void(*)(bs_runtime& runtime, string& args)> loadedFuncs)
+
+    bs_runtime(vector<string> lines, bool debugEnabled, map<string, void(*)(bs_memory* mem, const string& args)> loadedFuncs, bool autoWalk)
     {
         this->program_lines = lines;
         this->max_program_lines = lines.size();
         this->debugEnabled = debugEnabled;
+        this->autoWalkEnabled = autoWalk;
         this->linkedFuncs = loadedFuncs;
     }
 
@@ -91,7 +100,7 @@ public:
             cout << "\n\nStack:\n";
             for (bsMemoryObject obj : this->memoryObject.bsStack)
             {
-                cout << this->memoryObject.getStringReperOfVariable(obj.isObjectOf, obj.obj) << endl;
+                cout << obj.__str_reper__ << endl;
             }
             cout << "\n\nArray Stack:\n";
             this->memoryObject.displayArray();
@@ -104,226 +113,85 @@ public:
         {
             case 338: // mov
             {
-                vector<string> arg_parse = split(cmd_args, ",");
-                this->memoryObject.bsMovCmd(arg_parse[0], arg_parse[1]);
+                bs_MOV(this->memoryObject, cmd_args);
+                break;
+            }
+
+            case 445: // rint min,Max
+            {
+                bs_RINT(this->memoryObject, cmd_args);
                 break;
             }
 
             case 418: // rem
             {
-                if (cmd_args.rfind("%", 0) == 0)
-                    this->memoryObject.varRemove(split(cmd_args, "%")[1]);
-                
-                else
-                {
-                    cout << "variable " << cmd_args << " does not exist.\n";
-                    return 1;
-                }
+                bs_REM(this->memoryObject, cmd_args);
                 break;
             }
 
             case 450: // type <return ptr>,<var pointer>
             {
-                vector<string> argSplit = split(cmd_args, ",");
-                if (argSplit[1].rfind("%",0) == 0)
-                {
-                    bsMemoryObject obj = this->memoryObject.getVar(split(cmd_args, "%")[1]);
-                    this->memoryObject.bsMovCmd(argSplit[0], this->memoryObject.stringReperOfType(obj.isObjectOf));
-                }
-                else
-                {
-                    cout << "Variable " << argSplit[1] << " does not exist or hasn't been defined.\n";
-                    return 1;
-                }
+                bs_GETTYPE(this->memoryObject, cmd_args);
                 break;
             }
 
             case 536: // index <return ptr>,<var ptr>[<index>]
             {
-                vector<string> argSplit = split(cmd_args, ",", true);
-                vector<string> varNameAndIndex = split(argSplit[1], "["); // get the index
-                string index = split(varNameAndIndex[1], "]")[0];
-                long getIndex = 0;
-
-                if (index.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject indexObj = this->memoryObject.getVar(split(index, "%")[1]);
-                    getIndex = stol(this->memoryObject.getStringReperOfVariable(indexObj.isObjectOf, indexObj.obj));
-                }
-                else
-                {
-                    getIndex = stol(index);
-                }
-
-                if (varNameAndIndex[0].rfind("%", 0) == 0)
-                {
-                    bsMemoryObject lookfor = this->memoryObject.getVar(split(varNameAndIndex[0], "%")[1]);
-                    switch (lookfor.isObjectOf)
-                    {
-                        case BS_String:
-                        {
-                            BS_StringType str = this->memoryObject.returnAsType<BS_StringType>(lookfor.obj);
-                            BS_CharType stringChar = str.getChar(getIndex);
-                            this->memoryObject.bsMovCmd(argSplit[0], stringChar.__str__());
-                            break;
-                        }
-                        case BS_Bytes:
-                        {
-                            BS_BytesType bsByte = this->memoryObject.returnAsType<BS_BytesType>(lookfor.obj);
-                            BS_NumType bsNum = BS_NumType();
-                            bsNum.setValue(to_string(bsByte.getBitAtIndex(getIndex)));
-                            this->memoryObject.bsMovCmd(argSplit[0], bsNum.__str__());
-                            break;
-                        }
-                    }
-                }
-
+                bs_INDEX(this->memoryObject, cmd_args);
                 break;
             }
 
             case 332: // set <flag>,(1|0)
             {
-                vector<string> argSplit = split(cmd_args, ",", true);
-
-                if (argSplit[0].compare("isConst") == 0)
-                {
-                    if (argSplit[1].compare("1") == 0)
-                        this->memoryObject.constFlag = true;
-                    else
-                        this->memoryObject.constFlag = false;
-                }
+                bs_SET(this->memoryObject, cmd_args);
                 break;
             }
 
             case 656: // sizeof <return ptr>,<var ptr>
             {
-                vector<string> argSplit = split(cmd_args, ",", true);
-                if (argSplit[1].rfind("%", 0) == 0)
-                {
-                    bsMemoryObject mem = this->memoryObject.getVar(split(argSplit[1], "%")[1]);
-                    unsigned long varSize = this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj).size();
-                    this->memoryObject.bsMovCmd(argSplit[0], to_string(varSize));
-                }
-                else
-                {
-                    printf("The variables %s does not exist", argSplit[1].c_str());
-                    exit(20);
-                }
-                
+                bs_SIZEOF(this->memoryObject, cmd_args);
+                break;
+            }
+
+            case 923: // read_file <var_ptr>,filename
+            {
+                bs_READ(this->memoryObject, cmd_args);
+                break;
+            }
+            
+            case 1066: // write_file filename,<array>
+            {
+                bs_WRITE(this->memoryObject, cmd_args);
                 break;
             }
 
             case 1081: // array_size <return pointer>,<array name>
             {
-                vector<string> splitArgs = split(cmd_args, ",", true);
-                string returnVar = splitArgs[0];
-                string arrayName = splitArgs[1];
-
-                if (arrayName.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrayNameObj = this->memoryObject.getVar(split(arrayName, "%")[1]);
-                    arrayName = this->memoryObject.getStringReperOfVariable(arrayNameObj.isObjectOf, arrayNameObj.obj);
-                }
-
-                this->memoryObject.bsMovCmd(returnVar, to_string(this->memoryObject.arraySize(arrayName)));
+                bs_ARRAY_SIZE(this->memoryObject, cmd_args);
                 break;
             }
 
             case 1166: // array_erase <array name>
             {
-                string arr = cmd_args;
-                if (cmd_args.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrayName = this->memoryObject.getVar(split(cmd_args, "%")[1]);
-                    arr = this->memoryObject.getStringReperOfVariable(arrayName.isObjectOf, arrayName.obj);
-                }
-
-                this->memoryObject.eraseArray(arr);
+                bs_ARRAY_ERASE(this->memoryObject, cmd_args);
                 break;
             }
 
             case 1052: // array_make <array name>,<array size>
             {
-                vector<string> splitArgs = split(cmd_args, ",", true);
-                string arrayName;
-                int arraySize;
-
-                if (splitArgs[0].rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrayNameObj = this->memoryObject.getVar(split(splitArgs[0], "%")[1]);
-                    arrayName = this->memoryObject.getStringReperOfVariable(arrayNameObj.isObjectOf, arrayNameObj.obj);
-                }
-                else
-                    arrayName = splitArgs[0];
-
-                if (splitArgs[1].rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arraySizeObj = this->memoryObject.getVar(split(splitArgs[1], "%")[1]);
-                    arraySize = stoi(this->memoryObject.getStringReperOfVariable(arraySizeObj.isObjectOf, arraySizeObj.obj));
-                }
-                else
-                    arraySize = stoi(splitArgs[1]);
-
-                this->memoryObject.createArray(arrayName, arraySize);
-                
+                bs_ARRAY_MAKE(this->memoryObject, cmd_args);
                 break;
             }
 
             case 958: // array_get <outVar>,<array>[<index>]
             {
-                vector<string> splitArgs = split(cmd_args, ",", true);
-                vector<string> arrayNameIndex = split(splitArgs[1], "[");
-                string outVar = splitArgs[0];
-                string arrayName = arrayNameIndex[0];
-                string arrayIndex = split(arrayNameIndex[1], "]")[0];
-
-                if (arrayName.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrNameObj = this->memoryObject.getVar(split(arrayName, "%")[1]);
-                    arrayName = this->memoryObject.getStringReperOfVariable(arrNameObj.isObjectOf, arrNameObj.obj);
-                }
-
-                if (arrayIndex.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrIndexObj = this->memoryObject.getVar(split(arrayIndex, "%")[1]);
-                    arrayIndex = this->memoryObject.getStringReperOfVariable(arrIndexObj.isObjectOf, arrIndexObj.obj);
-                }
-
-                bsMemoryObject arrayGet = this->memoryObject.getFromArray(arrayName, stoi(arrayIndex));
-
-                this->memoryObject.putObjInMemory(outVar, arrayGet);
-
+                bs_ARRAY_GET(this->memoryObject, cmd_args);
                 break;
             }
 
             case 970: // array_set
             {
-                vector<string> splitArgs = split(cmd_args, ",", true);
-                vector<string> arrayNameIndex = split(splitArgs[0], "[");
-                string InData = splitArgs[1];
-                string arrayName = arrayNameIndex[0];
-                string arrayIndex = split(arrayNameIndex[1], "]")[0];
-
-                if (InData.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject indataObj = this->memoryObject.getVar(split(InData, "%")[1]);
-                    InData = this->memoryObject.getStringReperOfVariable(indataObj.isObjectOf, indataObj.obj);
-                }
-
-                if (arrayName.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrayNameObj = this->memoryObject.getVar(split(arrayName, "%")[1]);
-                    arrayName = this->memoryObject.getStringReperOfVariable(arrayNameObj.isObjectOf, arrayNameObj.obj);
-
-                }
-
-                if (arrayIndex.rfind("%", 0) == 0)
-                {
-                    bsMemoryObject arrayIndexObj = this->memoryObject.getVar(split(arrayIndex, "%")[1]);
-                    arrayIndex = this->memoryObject.getStringReperOfVariable(arrayIndexObj.isObjectOf, arrayIndexObj.obj);
-                }
-                this->memoryObject.arrayAppend(arrayName, stoi(arrayIndex), this->memoryObject.createObject(InData));
-
+                bs_ARRAY_SET(this->memoryObject, cmd_args);
                 break;
             }
 
@@ -333,7 +201,7 @@ public:
                 if (cmd_args.rfind("%", 0) == 0)
                 {
                     bsMemoryObject mem = this->memoryObject.getVar(split(cmd_args, "%")[1]);
-                    printString = this->memoryObject.getStringReperOfVariable(mem.isObjectOf, mem.obj);
+                    printString =  mem.__str_reper__;
                 }
                 else
                     printString = cmd_args;
@@ -352,8 +220,9 @@ public:
                 if (arg_split[1].rfind("%", 0) == 0)
                 {
                     bsMemoryObject tmpObj = this->memoryObject.getVar(split(arg_split[1], "%")[1]);
-                    arg_split[1] = this->memoryObject.getStringReperOfVariable(tmpObj.isObjectOf, tmpObj.obj);
+                    arg_split[1] = tmpObj.__str_reper__;
                 }
+                replace(arg_split[1], "\\n", "\n");
                 // print prompt
                 cout << arg_split[1];
                 getline(cin, inputValue);
@@ -369,39 +238,41 @@ public:
                 bsMemoryObject headVar;
                 bsMemoryObject tailVar;
 
+                cout << "egl len: " << this->eqlFlags.size() << endl;
+                cout << "grt len: " << this->grtFlags.size() << endl;
+
                 // check if a var is a var else make it an object
                 if (cmdSplit[0].rfind("%", 0) == 0)
                     headVar = this->memoryObject.getVar(split(cmdSplit[0], "%")[1]);
 
                 else
-                    headVar = this->memoryObject.createObject(split(cmdSplit[0], "%")[1]);
+                    headVar = this->memoryObject.createObject(cmdSplit[0]);
 
                 if (cmdSplit[1].rfind("%", 0) == 0)
                     tailVar = this->memoryObject.getVar(split(cmdSplit[1], "%")[1]);
 
                 else
-                    tailVar = this->memoryObject.createObject(split(cmdSplit[1], "%")[1]);
-
-                if (this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj) == this->memoryObject.getStringReperOfVariable(tailVar.isObjectOf, tailVar.obj))
+                    tailVar = this->memoryObject.createObject(cmdSplit[1]);
+                    
+                if (headVar.__str_reper__.compare(tailVar.__str_reper__) == 0)
                     this->eqlFlags.push_back(true);
 
                 else
                     this->eqlFlags.push_back(false);
                 
-                if (headVar.isObjectOf == BS_Num && tailVar.isObjectOf == BS_Num)
+                if (headVar.dType == BS_Num && tailVar.dType == BS_Num)
                 {
-                    BS_NumType headVarNum = any_cast<BS_NumType>(headVar.obj);
-                    BS_NumType tailVarNum = any_cast<BS_NumType>(tailVar.obj);
-                    if (headVarNum.isFloat() || tailVarNum.isFloat())
+
+                    if (headVar.isFloat || tailVar.isFloat)
                     {
-                        if(headVarNum.getValue<float>() > tailVarNum.getValue<float>())
+                        if (stof(headVar.__str_reper__) > stof(tailVar.__str_reper__))
                             this->grtFlags.push_back(true);
                         else
                             this->grtFlags.push_back(false);
                     }
                     else
                     {
-                        if(headVarNum.getValue<long>() > tailVarNum.getValue<long>())
+                        if (stol(headVar.__str_reper__) > stol(tailVar.__str_reper__))
                             this->grtFlags.push_back(true);
                         else
                             this->grtFlags.push_back(false);
@@ -484,6 +355,15 @@ public:
                 break;
             }
 
+            case 421: // peek outvar
+            {
+                // works kinda like pop but does
+                // not remove it from the stack
+                bsMemoryObject peekObject = this->memoryObject.bsStack.back();
+                this->memoryObject.putObjInMemory(cmd_args, peekObject);
+                break;
+            }
+
             // math stuff
             // this might be able to be reduced but leaving it for now
             case 297: // add
@@ -494,14 +374,14 @@ public:
                 bsMemoryObject headVar = this->memoryObject.getVar(varName);
                 bsMemoryObject tailVar;
 
-                if (headVar.isObjectOf == BS_String)
+                if (headVar.dType == BS_String)
                 {
                     if (splitArgs[1].rfind("%", 0) == 0)
                         tailVar = this->memoryObject.getVar(split(splitArgs[1], "%", true)[1]);
                     else
                         tailVar = this->memoryObject.createObject(splitArgs[1]);
 
-                    this->memoryObject.bsMovCmd(varName, this->memoryObject.getStringReperOfVariable(headVar.isObjectOf, headVar.obj) + this->memoryObject.getStringReperOfVariable(tailVar.isObjectOf, tailVar.obj));
+                    this->memoryObject.bsMovCmd(varName, tailVar.__str_reper__);
                 }
                 else
                 {
@@ -604,16 +484,17 @@ public:
         }
     }
     
-    void handle_plugins( const string& cmd_line )
+    int handle_plugins( const string& cmd_line )
     {
         vector<string> splitCmd = split(cmd_line, " ", true);
         auto it = this->linkedFuncs.find(splitCmd[0]);
 
         if (it == this->linkedFuncs.end())
         {
-            return;
+            return -1;
         }
-        it->second(&this, splitCmd[1]);
+        it->second(&this->memoryObject, splitCmd[1]);
+        return 0;
     }
 
     void runtimeMain( void )
@@ -631,7 +512,8 @@ public:
                 if (this->program_counter + 1 < this->max_program_lines)
                     cout << "Next: " << this->program_counter + 1 << ":" << this->program_lines[this->program_counter+1];
                 cout << current_line << endl;
-                getline(cin, dummy);
+                if (this->autoWalkEnabled)
+                    getline(cin, dummy);
             }
 
             vector<string> lineSplit = split(current_line, " ", true);
@@ -641,13 +523,13 @@ public:
 
             if (cmdOut == 999)
             {
-                handle_plugins(current_line);
+                cmdOut = handle_plugins(current_line);
             }
 
             else if (cmdOut != 0)
             {
-                debug("There was an issue");
-                debug(cmdOut);
+                cout << "There was an issue\n";
+                cout << cmdOut << endl;
                 this->canRun = false;
                 return;
             }
