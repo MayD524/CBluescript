@@ -1,4 +1,0 @@
-mov a,10
-type a,%a
-out %a
-;sizeof b,%a

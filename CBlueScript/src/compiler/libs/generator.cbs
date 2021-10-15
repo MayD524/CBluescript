@@ -1,9 +1,0 @@
-
-
-label make_gen
-
-    ret
-
-label gen_next
-
-    ret
