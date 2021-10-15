@@ -1,0 +1,25 @@
+{
+    "name": "bs",
+    "displayName": "bluescript",
+    "description": "",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "bs",
+            "aliases": ["BlueScript", "bs"],
+            "extensions": [".bs",".cbs"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "bs",
+            "scopeName": "source.bs",
+            "path": "./syntaxes/bs.tmLanguage.json"
+        }]
+    }
+}

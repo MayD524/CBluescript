@@ -1,0 +1,10 @@
+include libs/stdlib.cbs
+include libs/math.cbs
+
+function main()
+{
+    a = 10
+    b = 20
+    a += b
+    println(a)
+}
