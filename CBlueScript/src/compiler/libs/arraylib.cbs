@@ -34,7 +34,7 @@ label arrayGet
     free %arrayGet.arrayIndex
     free %arrayGet.arrayName
     ret
-
+; yes
 ; get size of an array
 ; arraySize(arrayname)
 label arraySize

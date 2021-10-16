@@ -157,7 +157,29 @@ class bsElseObj(bsBlockObjects):
         self.compiler.parsedLines.append(f"cmp %{self.prev_id}_isSet,%{elseTmpVar} ; compair the isSet of the previous if block")
         self.compiler.parsedLines.append(f"je end_of_else_{self.blockName} ; jump if the previous if was true")
         
+class bsElifObject(bsBlockObjects):
+    def __init__(self, bsCompilerInstane:bsCompiler, splitLine:str, prev_id:str) -> None:
+            super().__init__(bsCompilerInstance.gen_tmpVars(), bsCompilerInstance, splitLine)
+            self.prev_id = prev_id
 
+    def block_end(self) -> None:
+        self.compiler.parsedLines.append(f"label end_of_elif_{self.blockName} ; end of elif")
+
+    def block_start(self) -> None:
+        elifTmpVar = self.compiler.gen_tmpVars()
+        
+        ## else block portion
+        self.compiler.parsedLines.append(f"mov {elifTmpVar},1 ;temp constant")
+        self.compiler.parsedLines.append(f"cmp %{self.prev_id}_isSet,%{elifTmpVar}")
+        self.compiler.parsedLines.append(f"free %{elifTmpVar}")
+        self.compiler.parsedLines.append(f"je end_of_elif_{self.blockName} ; jump to end")
+        
+        ## if block portion
+        self.logicComp(self.line, True)
+        self.compiler.parsedLines.append(f"mov {self.blockName}_isSet,0")
+        self.compiler.parsedLines.append(f"{self.cmpLine} ; if cmp")
+        self.compiler.parsedLines.append(f"{self.logicMode} end_of_elif_{self.blockName}")
+        self.compiler.parsedLines.append(f"mov {self.blockName}_isSet,1")
 
 class bsIfObj(bsBlockObjects):
     def __init__(self, bsCompilerInstance:bsCompiler, splitLine:str) -> None:

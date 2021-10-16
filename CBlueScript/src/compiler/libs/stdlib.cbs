@@ -93,6 +93,16 @@ label print
     free %print.string
     ret
 
+; get user input
+; input(prompt)
+label input
+	pop inp.prompt
+	in %inp.prompt,inp.out
+	push %inp.out
+	free %inp.prompt
+	free %inp.out
+	ret
+	
 ; get a random number in range
 ; random(min, max)
 label random
@@ -135,6 +145,27 @@ label read
     push %fData
     free %read.filename
     ret
+
+; copy a string
+; strcpy(string1, string2, count)
+label strcpy
+    pop strcpy.count
+    pop strcpy.string2
+    pop strcpy.string1
+    mov strcpy.cnt,0
+    add strcpy.count,1
+    label _strcpyLoop
+        add strcpy.string1,%strcpy.string2
+        add strcpy.cnt,1
+    cmp %strcpy.cnd,%strcpy.count
+    jne _strcpyLoop
+    push %strcpy.string1
+    free %strcpy.string1
+    free %strcpy.string2
+    free %strcpy.count
+    free %strcpy.cnt
+    ret
+
 
 ; write a file
 ; write(filename, array)

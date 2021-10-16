@@ -21,7 +21,7 @@ class bsCompiler:
         self.lineNo = 0
         
         self.blocks = []
-        
+         
         self.keyWords = [
             ## they all have spaces for parsing 
             "if", 
@@ -29,7 +29,7 @@ class bsCompiler:
             "function",
             "while",
             "Print",
-            "input",
+            "Input",
             "return",
             "free"        
         ]
@@ -227,7 +227,7 @@ class bsCompiler:
                         self.parsedLines.append(f'free %{self.curScope[-1]}.{tmpVar}')
                         self.parsedLines.append('ret ; end of function')
                 
-                elif splitLine[0] == 'input':
+                elif splitLine[0] == 'Input':
                     ## input <prompt>,<return>
                     prompt, returnPointer = splitLine[1].split(",", 1)
                     prompt = prompt.strip()
@@ -240,7 +240,8 @@ class bsCompiler:
                         self.parsedLines.append(f"mov {self.curScope[-1]}.{tmpPromptVar},{prompt}")
                         prompt = f"%{self.curScope[-1]}.{tmpPromptVar}"
                     
-                    self.parsedLines.append(f"in {self.curScope[-1]}.{returnPointer},{prompt}")
+                    #self.parsedLines.append(f"in {self.curScope[-1]}.{returnPointer},{prompt}")
+                    self.parsedLines.append(f"in {prompt},{self.curScope[-1]}")
                     self.declairedVars[f"{self.curScope[-1]}.{returnPointer}"] = "variable"
 
                 elif splitLine[0] == "while":

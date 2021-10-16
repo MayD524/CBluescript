@@ -1,5 +1,7 @@
-mov a,10
-mov b,10
-add a,%b
-out %a
+#load_dll toolkit.dll
+mov a,t*t
+mov b,*
+contains %a,%b
+pop c
+out %c
 out \n
