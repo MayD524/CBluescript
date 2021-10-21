@@ -1,0 +1,59 @@
+;------------------------------
+; Author: May Draskovics
+; Date: 10/5/2021
+; name: arraylib.cbs
+; Bluescript arrays
+;------------------------------
+
+; create a new array
+; makeArray(arrayname, size)
+label makeArray
+    pop makeArray.arraySize
+    pop makeArray.arrayName
+    array_make %makeArray.arrayName,%makeArray.arraySize
+    push %makeArray.arrayName
+    free %makeArray.arrayName
+    free %makeArray.arraySize
+    ret
+
+; erase an array from memory
+; eraseArray(arrayname)
+label eraseArray
+    pop eraseArray.name
+    array_erase %eraseArray.name
+    ret
+
+; get a value from an array
+; arrayGet(arrayname, index)
+label arrayGet
+    pop arrayGet.arrayIndex
+    pop arrayGet.arrayName
+    array_get tmpObj,%arrayGet.arrayName[%arrayGet.arrayIndex]
+    push %tmpObj
+    free %tmpObj
+    free %arrayGet.arrayIndex
+    free %arrayGet.arrayName
+    ret
+; yes
+; get size of an array
+; arraySize(arrayname)
+label arraySize
+    pop arraySize.arrayname
+    array_size arraySize.size,%arraySize.arrayname
+    sub arraySize.size,1
+    push %arraySize.size
+    free %arraySize.size
+    free %arraySize.arrayname
+    ret
+
+; append to an array
+; append(arrayname, index, value)
+label append
+    pop append.value
+    pop append.index
+    pop append.arrayname
+    array_set %append.arrayname[%append.index],%append.value
+    free %append.value
+    free %append.index
+    free %append.arrayname
+    ret
