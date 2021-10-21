@@ -4,4 +4,18 @@ include libs/stdlib.cbs
 function main()
 {
 	a = input("prompt>")
+	if a == 1
+	{
+		println("hello")
+	}
+	elif a == 2
+	{
+		println("good bye")
+	}
+	else
+	{
+		println("weee")
+	}
+
+
 }

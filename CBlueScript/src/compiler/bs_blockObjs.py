@@ -36,7 +36,6 @@ class bsBlockObjects:
 
     def logicComp( self, exper:str, opposite:bool=False ) -> str:
         logic_oper = self.getLogicOper(exper, opposite)
-
         if logic_oper == False:
             ## eval true or false raw expression
             return
@@ -137,7 +136,7 @@ class bsWhileObj(bsBlockObjects):
 
 class bsElseObj(bsBlockObjects):
     def __init__(self, bsCompilerInstance:bsCompiler, splitLine:str, prev_id:str) -> None:
-        super().__init__(bsCompilerInstance.gen_tmpVars(), bsCompilerInstance, splitLine)
+        super().__init__(prev_id, bsCompilerInstance, splitLine)
         self.prev_id = prev_id
     
     def block_end(self) -> None:
@@ -157,9 +156,9 @@ class bsElseObj(bsBlockObjects):
         self.compiler.parsedLines.append(f"cmp %{self.prev_id}_isSet,%{elseTmpVar} ; compair the isSet of the previous if block")
         self.compiler.parsedLines.append(f"je end_of_else_{self.blockName} ; jump if the previous if was true")
         
-class bsElifObject(bsBlockObjects):
-    def __init__(self, bsCompilerInstane:bsCompiler, splitLine:str, prev_id:str) -> None:
-            super().__init__(bsCompilerInstance.gen_tmpVars(), bsCompilerInstance, splitLine)
+class bsElifObj(bsBlockObjects):
+    def __init__(self, bsCompilerInstance:bsCompiler, splitLine:str, prev_id:str) -> None:
+            super().__init__(prev_id, bsCompilerInstance, splitLine)
             self.prev_id = prev_id
 
     def block_end(self) -> None:
@@ -176,7 +175,6 @@ class bsElifObject(bsBlockObjects):
         
         ## if block portion
         self.logicComp(self.line, True)
-        self.compiler.parsedLines.append(f"mov {self.blockName}_isSet,0")
         self.compiler.parsedLines.append(f"{self.cmpLine} ; if cmp")
         self.compiler.parsedLines.append(f"{self.logicMode} end_of_elif_{self.blockName}")
         self.compiler.parsedLines.append(f"mov {self.blockName}_isSet,1")

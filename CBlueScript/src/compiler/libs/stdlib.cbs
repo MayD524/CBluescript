@@ -97,7 +97,7 @@ label print
 ; input(prompt)
 label input
 	pop inp.prompt
-	in %inp.prompt,inp.out
+	in inp.out,%inp.prompt
 	push %inp.out
 	free %inp.prompt
 	free %inp.out

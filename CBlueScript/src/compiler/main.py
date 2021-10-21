@@ -280,7 +280,14 @@ class bsCompiler:
                     self.blocks.pop()
                     tmpElseBlock.block_start()
                     self.blocks.append(tmpElseBlock)
-                
+                    
+                elif len(self.filelines) > self.lineNo + 1 and self.filelines[self.lineNo + 1].startswith("elif"):
+                    splitLine = self.filelines[self.lineNo + 1].split(" ",1)[1]
+                    tmpElifBlock = bs_blockObjs.bsElifObj(self, splitLine, self.blocks[-1].blockName)
+                    self.blocks[-1].block_end()
+                    self.blocks.pop()
+                    tmpElifBlock.block_start()
+                    self.blocks.append(tmpElifBlock)
                 else:
                     self.blocks[-1].block_end()
                     self.blocks.pop()
@@ -292,7 +299,7 @@ class bsCompiler:
         if not self.isLib:
             self.parsedLines.append("label EOF_BS_JMP_POINT") ## used for exiting later
         #self.parsedLines = [x for x in self.parsedLines if x is not None]
-        print('\n'.join(self.parsedLines))
+        #print('\n'.join(self.parsedLines))
 
 
 def main( filename:str, isLib:bool ) -> None:
