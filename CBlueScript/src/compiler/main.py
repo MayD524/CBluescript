@@ -111,7 +111,6 @@ class bsCompiler:
         tokenized = bs_tokenizer.tokenize_all(self.filelines)
         for t in range(len(tokenized)):
             token = tokenized[t]
-            print(token)
             if token in bs_tokenizer.BS_MATH_TOKENS:
                 self.inMath = True
                 match token:
@@ -311,13 +310,13 @@ def main( filename:str, isLib:bool ) -> None:
     compiler = bsCompiler(filename, fileLines, isLib)
     compiler.compile()
     
-    #writeFile = filename.replace('.bs', '.cbs')
-    #with open(writeFile, "w+"): pass
-    #fm.write_file(writeFile, "\n".join(compiler.parsedLines))
+    writeFile = filename.replace('.bs', '.cbs')
+    with open(writeFile, "w+"): pass
+    fm.write_file(writeFile, "\n".join(compiler.parsedLines))
         
         
 if __name__ == "__main__":
-    #if (len(sys.argv) > 0):
-    filename = "test.bs"#sys.argv[1]
-    #isLib = False if "lib" not in sys.argv else True
-    main(filename, False)
+    if (len(sys.argv) > 0):
+        filename = sys.argv[1]
+    isLib = False if "lib" not in sys.argv else True
+    main(filename, isLib)
