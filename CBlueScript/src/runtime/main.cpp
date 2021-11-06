@@ -143,7 +143,7 @@ int main( int argc, char** argv )
             autoWalk = true;
         getlibs(fData);
 
-        bs_runtime runtime = bs_runtime(fData, debugEnabled, linkedFuncs, autoWalk);
+        bs_runtime runtime = bs_runtime(fData, debugEnabled, linkedFuncs, autoWalk, args);
 
 
         runtime.runtimeMain();

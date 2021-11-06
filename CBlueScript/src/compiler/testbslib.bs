@@ -1,0 +1,5 @@
+
+function test(string) {
+    Print string
+    Print "\n"
+}

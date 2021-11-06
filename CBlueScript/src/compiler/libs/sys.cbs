@@ -1,0 +1,17 @@
+;------------------------
+; Author: May Draskovics
+; Date: 10/21/2021
+;------------------------
+; for windows dlls
+#load_dll bs_sys.dll
+; for linux sos
+#load_so ./bs_sys.so
+
+; get cli arg at index
+; argv_get(index)
+label argv_get
+    pop argv_get.index
+    push argv
+    push %argv_get.index
+    call array_get
+    ret

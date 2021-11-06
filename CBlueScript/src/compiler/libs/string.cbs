@@ -1,0 +1,28 @@
+#load_dll toolkit.dll
+
+; concat 2 stringSize
+; concat(str1, str2)
+label concat
+    pop cc.str2
+    pop cc.str1
+
+    add cc.str1,%cc.str2
+    push %cc.str1
+
+    free %cc.str1
+    free %cc.str2
+
+    ret
+
+; copy a string x times
+; strcpy(str1, str2, count)
+label strcpy
+    pop strcpy.count
+    pop strcpy.str2
+    pop strcpy.str1
+
+    strcpy %strcpy.str1,%strcpy.str2,%strcpy.count
+    free %strcpy.count
+    free %strcpy.str2
+    free %strcpy.str1
+    ret

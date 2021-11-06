@@ -1,0 +1,17 @@
+function main()
+{
+    a = 10
+    b = 10
+    if a == b {
+        b += 1
+        if a < b {
+            Print "TEST1"
+        }
+        else {
+            Print "TEST2"
+        }
+    }
+    else {
+        Print "TEST3"
+    }
+}

@@ -79,16 +79,27 @@ private:
 
 public:
 
-    bs_runtime(vector<string> lines, bool debugEnabled, map<string, void(*)(bs_memory* mem, const string& args)> loadedFuncs, bool autoWalk)
+    bs_runtime(vector<string> lines, bool debugEnabled, map<string, void(*)(bs_memory* mem, const string& args)> loadedFuncs, bool autoWalk, vector<string> argv)
     {
         this->program_lines = lines;
         this->max_program_lines = lines.size();
         this->debugEnabled = debugEnabled;
         this->autoWalkEnabled = autoWalk;
         this->linkedFuncs = loadedFuncs;
+        this->_handleCliArgs( argv );
     }
 
     ~bs_runtime ( void ) = default;
+
+    void _handleCliArgs( vector<string> args )
+    {
+        this->memoryObject.createArray("argv", args.size()); 
+        for (int i=0; i < args.size(); i++)
+        {
+            bsMemoryObject obj = this->memoryObject.createObject(args[i]);
+            this->memoryObject.arrayAppend("argv", i, obj);
+        }
+    }
 
     int run_cmd( int cmd, string cmd_args )
     {
@@ -110,6 +121,14 @@ public:
         //debug(cmd);
         switch (cmd)
         {
+            case 337: // not
+            {
+                if (cmd_args.compare("eql") == 0)
+                    this->eqlFlag = !this->eqlFlag;
+                else if (cmd_args.compare("grt") == 0)
+                    this->grtFlag = !this->eqlFlag;
+            }
+
             case 338: // mov
             {
                 bs_MOV(this->memoryObject, cmd_args);

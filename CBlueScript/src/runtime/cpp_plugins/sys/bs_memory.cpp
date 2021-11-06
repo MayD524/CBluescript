@@ -1,11 +1,4 @@
-/*
-    Author: May Draskovics
-    Date: 10/14/2021
 
-    Description:
-        Generic memory used through out bluescript & libs
-
-*/
 #include "bs_memory.h"
 
 bsMemoryObject bs_memory::bs_NULL( void )
@@ -183,7 +176,7 @@ int bs_memory::arraySize( const string& arrayName )
 int bs_memory::indexInArray( const string& arrayName, int index )
 {
     auto it = this->bsArraySizes.find(arrayName);
-    if (it == this->bsArraySizes.end())
+    if (it != this->bsArraySizes.end())
     {
         cout << "Array does not exist" << endl;
         exit(23);
@@ -259,10 +252,11 @@ bsMemoryObject bs_memory::runMath( const string& line, const int bsMathOper )
             exit(1);
         }
     }
+    else
+        tailVar = this->createObject(args[1]);
 
     if (args[1].rfind("%",0) == 0 && this->varExists(split(args[1], "%")[1]))
         tailVar = this->getVar(split(args[1], "%")[1]);
-    
     else
         tailVar = this->createObject(args[1]);
 
@@ -274,7 +268,7 @@ bsMemoryObject bs_memory::runMath( const string& line, const int bsMathOper )
     }
     else
     {
-        long out = bsMath<long>(stol(headVar.__str_reper__), stol(tailVar.__str_reper__), bsMathOper);
+        long out = bsMath<long>(stoi(headVar.__str_reper__), stoi(tailVar.__str_reper__), bsMathOper);
         outObj.__str_reper__ = to_string(out);
     }
 

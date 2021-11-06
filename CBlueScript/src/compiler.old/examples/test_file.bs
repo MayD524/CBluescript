@@ -1,0 +1,6 @@
+function test(arg)
+{
+    a = 2
+    a = pow(a, 2)
+    print a
+}
