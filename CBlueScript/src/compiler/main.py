@@ -109,9 +109,14 @@ class bsCompiler:
     def compile(self) -> None:
         self.pre_read()
         tokenized = bs_tokenizer.tokenize_all(self.filelines)
+        skip = 0
         for t in range(len(tokenized)):
+            if skip:
+                skip -= 1
+                continue
             token = tokenized[t]
             if token in bs_tokenizer.BS_MATH_TOKENS:
+               
                 self.inMath = True
                 match token:
                     case bs_tokenizer.MATH_ADDOP:
@@ -178,7 +183,7 @@ class bsCompiler:
                     self.isFuncArgs = False
                     self.makeVar    = False
                     self.parseAsStr = False
-                    
+
                     if len(self.stringHold) > 0 and self.callFunc:
                         self.parsedLines.append(f'push {" ".join(self.stringHold)}')
                         self.stringHold = []
@@ -260,7 +265,10 @@ class bsCompiler:
                     self.parsedLines.append(f'cmp %{blockName}_isSet,%{blockName}_const')
                     self.parsedLines.append(f'free %{blockName}_const')
                     self.parsedLines.append(f'je {blockName}_endOfelse')
-                    
+                
+                case bs_tokenizer.BS_GLOBAL:
+                    self.isGlobal = True
+                
                 case bs_tokenizer.BS_WHILEKW:
                     blockName = self.genTmp(20)
                     self.blocks.append([blockName, 'logic_while', f'{blockName}_whileBlock'])
@@ -310,6 +318,9 @@ class bsCompiler:
                         if ( nt:= tokenized[t + 1]) == bs_tokenizer.EQL and not self.curLine:
                             ## var delc
                             self.makeVar = True
+                            if ( nxt := tokenized[t + 2]) not in bs_tokenizer.BS_MATH_TOKENS:
+                                self.parsedLines.append(f"mov {self.curScope[-1]}.{token},{self.isDeclared(nxt)}" if not self.isGlobal else f"global.{token}")
+                                skip += 2
                             self.curLine = f"mov {self.curScope[-1] if not self.isGlobal else 'global'}.{token},"
                             self.declared.append(f"{self.curScope[-1]}.{token}" if not self.isGlobal else f"global.{token}")
 
