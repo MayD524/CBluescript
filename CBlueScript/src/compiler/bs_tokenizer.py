@@ -119,12 +119,13 @@ nltk.download("punkt")
 
 HALF_LOGIC = ['<', '>', '!']
 
-def tokenize_all(file_lines:list[str]) -> list[int]:
+def tokenize_all(file_lines:list[str]) -> list[list[int]]:
     tokenized_lines:list[int] = []
     inStr = False
     inFuncArgs = False
     for line in file_lines:
         lineTokens = nltk.word_tokenize(line)
+        curLine = []
         for token in lineTokens:
             if token in HALF_LOGIC:
                 if lineTokens[lineTokens.index(token) + 1] == '=':
@@ -136,12 +137,12 @@ def tokenize_all(file_lines:list[str]) -> list[int]:
                     inStr = not inStr
                     continue
                 if inStr:
-                    tokenized_lines.append(token)
+                    curLine.append(token)
                     continue
 
                 if (type(t) == tuple):
                     for x in t:
-                        tokenized_lines.append(x)
+                        curLine.append(x)
                     continue
 
                 if (t == LPAR):
@@ -151,14 +152,15 @@ def tokenize_all(file_lines:list[str]) -> list[int]:
                     inFuncArgs = False
 
                 if (inFuncArgs and t == COMMA):
+                    curLine.append(',')
                     continue
                 
-                tokenized_lines.append(t)
+                curLine.append(t)
                 
             else:
-                tokenized_lines.append(token)
+                curLine.append(token)
         
-        tokenized_lines.append(NEWOP)
-
-    tokenized_lines.append(BSEOF)
+        curLine.append(NEWOP)
+        tokenized_lines.append(curLine)
+    tokenized_lines.append([BSEOF])
     return tokenized_lines

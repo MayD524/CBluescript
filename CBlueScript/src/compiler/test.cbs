@@ -1,0 +1,11 @@
+jmp main
+label test
+pop test.a
+push %test.a
+ret
+label main
+push test
+push test hello world
+pop %main.a
+jmp BS_EOF_JUMP_POINT
+label BS_EOF_JUMP_POINT
