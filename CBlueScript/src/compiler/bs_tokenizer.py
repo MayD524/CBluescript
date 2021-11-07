@@ -115,7 +115,7 @@ BS_BINDS = {
     ";"        : NEWOP,
 }
 
-#nltk.download("punkt")
+nltk.download("punkt")
 
 HALF_LOGIC = ['<', '>', '!']
 

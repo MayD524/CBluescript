@@ -74,7 +74,7 @@ class bsCompiler:
 
             elif include.endswith('.cbs'):
                 readLines = fm.clean_read(fname)
-                self.parsedLines = readLines + self.parsedLines
+                self.parsedLines = self.parsedLines + readLines
 
     
     def genTmp(self, length:int) -> str:
@@ -178,6 +178,11 @@ class bsCompiler:
                     self.isFuncArgs = False
                     self.makeVar    = False
                     self.parseAsStr = False
+                    
+                    if len(self.stringHold) > 0 and self.callFunc:
+                        self.parsedLines.append(f'push {" ".join(self.stringHold)}')
+                        self.stringHold = []
+                    
                     self.callFunc   = False
                     
                     if self.inMath:
@@ -196,8 +201,9 @@ class bsCompiler:
                     self.parsedLines.append(self.curLine)
                     if self.curLine and self.curLine.startswith('cmp'):
                         if self.swapMode: self.parsedLines.append('not grt'); self.swapMode = False
-                        self.parsedLines.append(f'{self.blocks[-1][3]} {self.blocks[-1][2]}')
-                        self.parsedLines.append(f'mov {self.blocks[-1][0]}_isSet,1')
+                        if self.blocks[-1][1] != 'logic_while':
+                            self.parsedLines.append(f'{self.blocks[-1][3]} {self.blocks[-1][2]}')
+                            self.parsedLines.append(f'mov {self.blocks[-1][0]}_isSet,1')
 
                     self.curLine    = None
                     continue        
@@ -213,11 +219,17 @@ class bsCompiler:
                         self.parsedLines.append("ret")
                     
                     elif len(self.blocks) > 0 and self.blocks[-1][1].startswith('logic'):
-                        self.parsedLines.append(f'label {self.blocks[-1][2]}')
-                        if tokenized[t + 2] not in [bs_tokenizer.BS_ELIFKW, bs_tokenizer.BS_ELSEKW]:
-                            self.blockNames.pop() ## block namespace ends here
+                        if self.blocks[-1][1] != 'logic_while':
+                            self.parsedLines.append(f'label {self.blocks[-1][2]}')
+                            if tokenized[t + 2] not in [bs_tokenizer.BS_ELIFKW, bs_tokenizer.BS_ELSEKW]:
+                                self.blockNames.pop() ## block namespace ends here
+                            self.blocks.pop()
+                            self.logicInc -= 1
+                            continue
+                        
+                        
+                        self.parsedLines.append(f'{self.blocks[-1][3]} {self.blocks[-1][2]}')
                         self.blocks.pop()
-                        self.logicInc -= 1
                         
                     else:
                         self.parsedLines.append("jmp BS_EOF_JUMP_POINT")
@@ -248,7 +260,14 @@ class bsCompiler:
                     self.parsedLines.append(f'cmp %{blockName}_isSet,%{blockName}_const')
                     self.parsedLines.append(f'free %{blockName}_const')
                     self.parsedLines.append(f'je {blockName}_endOfelse')
-                
+                    
+                case bs_tokenizer.BS_WHILEKW:
+                    blockName = self.genTmp(20)
+                    self.blocks.append([blockName, 'logic_while', f'{blockName}_whileBlock'])
+                    self.parsedLines.append(f'label {blockName}_whileBlock')
+                    self.curLine = 'cmp '
+                    self.logicInc += 1
+                    
                 case _:
                 
                     if self.curLine and self.curLine.startswith('cmp'):
@@ -277,7 +296,10 @@ class bsCompiler:
                             else:
                                 self.curLine += self.isDeclared(token)
                             continue
-                        self.parsedLines.append(f"push {self.isDeclared(token)}")
+                        if tokenized[t + 1] == bs_tokenizer.COMMA or tokenized[t + 1] == bs_tokenizer.RPAR:
+                            self.parsedLines.append(f"push {self.isDeclared(token)}")
+                        else:
+                            self.stringHold.append(token)
                         continue
 
                     elif self.makeVar and not self.curLine:
