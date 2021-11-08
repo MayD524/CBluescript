@@ -54,7 +54,7 @@ class bsCompiler:
         elif (x := f"global.{varname}") in self.declared:
             return f"%{x}"
         else:
-            return varname
+            return varname    
 
     def pre_read(self, arr=None) -> None:
         if not arr:
@@ -105,6 +105,27 @@ class bsCompiler:
         ## return non-conditional jump incase of error
         return 'jmp'
 
+    ## make a function that splits a list by a delim making a 2d array
+    def split_by(self, arr:list, delim:str) -> list:
+        retArr:list = []
+        tmp:list = []
+        for i in arr:
+            if i != delim:
+                tmp.append(i)
+        
+            else:
+                retArr.append(tmp)
+                tmp = []
+        retArr.append(tmp)
+        return retArr
+
+
+    ## change name of variable depending on scope
+    def changeName(self, name:str) -> str:
+        if self.isGlobal:
+            return f"global.{name}"
+        return f"{self.curScope[-1]}.{name}"    
+
     def compile(self) -> None:
         self.pre_read()
         tokenized = bs_tokenizer.tokenize_all(self.filelines)
@@ -117,7 +138,14 @@ class bsCompiler:
                 expectReturn  = True if bs_tokenizer.EQL in line else False
                 funcName      = line[line.index(bs_tokenizer.LPAR) - 1]
                 funcArgs      = line[line.index(bs_tokenizer.LPAR) + 1:line.index(bs_tokenizer.RPAR)]
-                print(funcArgs)
+                funcArgs      = [' '.join(x) for x in self.split_by(funcArgs, ',')][::-1]
+                retVarName    = line[line.index(bs_tokenizer.EQL) - 1] if expectReturn else None
+
+                for val in funcArgs:
+                    self.parsedLines.append(f'push {self.isDeclared(val)}')
+                self.parsedLines.append(f'call {funcName}')
+                self.parsedLines.append(f'pop {self.changeName(retVarName)}')
+                self.declared.append(self.changeName(retVarName))
                 continue
             
             print(line)
@@ -200,7 +228,7 @@ class bsCompiler:
                             self.parsedLines.append(f'push {" ".join(self.stringHold)}')
                             self.stringHold = []
                         
-                        if self.callFunc and expectReturn:
+                        if self.callFunc and expectReturn and self.curLine:
                             varname = self.isDeclared(self.curLine.split(' ', 1)[1].split('.',1)[1].replace(',', ''))
                             self.curLine = f'pop {varname}'
                         
