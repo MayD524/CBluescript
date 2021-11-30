@@ -114,7 +114,7 @@ void bs_memory::arrayAppend( const string& arrayName, int index, const bsMemoryO
         this->arrayStack[index] = obj;
         return;
     }
-    cout << "Out of range error" << endl;
+    printf("[bs_memory::arrayAppend] Index out of range (%i is out of range of %s)\n", index, arrayName.c_str());
     exit(21);
 }
 
@@ -133,8 +133,8 @@ void bs_memory::putObjInMemory( const string& _ptrname, const bsMemoryObject& _d
             bsMemoryObject currentVal = this->getVar(_ptrname);
             if (currentVal.__str_reper__ != _data.__str_reper__)
             {
-                cout << "Cannot change an immutable variable" << endl;
-                exit(1);
+                printf("[bs_memory::putObjInMemory] Cannot change an immutable variable \"%s\"\n", _ptrname.c_str());
+                exit(25);
             }
             else
                 return;
@@ -164,7 +164,7 @@ int bs_memory::arraySize( const string& arrayName )
             
     if (it == this->bsArraySizes.end())
     {
-        cout << "Array does not exist" << endl;
+        printf("[bs_memory::arraySize] Array does not exist. \"%s\"\n", arrayName.c_str());
         exit(23);
         return -1;
     }
@@ -178,7 +178,7 @@ int bs_memory::indexInArray( const string& arrayName, int index )
     auto it = this->bsArraySizes.find(arrayName);
     if (it != this->bsArraySizes.end())
     {
-        cout << "Array does not exist" << endl;
+        printf("[bs_memory::indexInArray] Array does not exist. \"%s\"\n", arrayName.c_str());
         exit(23);
         return -1;
     }

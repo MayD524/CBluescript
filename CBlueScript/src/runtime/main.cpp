@@ -127,6 +127,7 @@ vector<string> argsToVector( char ** args )
 
 int main( int argc, char** argv )
 {
+    printf("BlueScript version 2.0\n");
     vector<string> args = argsToVector(argv);
     bool debugEnabled = false;
     bool autoWalk = false;
@@ -135,16 +136,13 @@ int main( int argc, char** argv )
         string fname = string(argv[1]);
         //cout << fname << endl;
         vector<string> fData = readFile(fname);
-
         if (anyInVector<string>("debug", args))
             debugEnabled = true;
 
         if (anyInVector<string>("self_walk", args))
             autoWalk = true;
         getlibs(fData);
-
         bs_runtime runtime = bs_runtime(fData, debugEnabled, linkedFuncs, autoWalk, args);
-
 
         runtime.runtimeMain();
     }

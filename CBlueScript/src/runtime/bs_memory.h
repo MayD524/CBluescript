@@ -47,10 +47,8 @@ struct ArrayLocs
 
 class bs_memory
 {
-private:
-    static bsMemoryObject bs_NULL( void );
-
 public:
+    static bsMemoryObject bs_NULL( void );
     bool constFlag = false;
     map<string, bsMemoryObject> bsMemory;
     map<string, long> labelLocations;

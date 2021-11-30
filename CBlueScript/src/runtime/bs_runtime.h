@@ -86,7 +86,7 @@ public:
         this->debugEnabled = debugEnabled;
         this->autoWalkEnabled = autoWalk;
         this->linkedFuncs = loadedFuncs;
-        this->_handleCliArgs( argv );
+        //this->_handleCliArgs( argv );
     }
 
     ~bs_runtime ( void ) = default;

@@ -1,0 +1,8 @@
+
+function main(test,test3) {
+    Print "hello world!"; // test
+    a = 10;
+    if a == 10 {
+    	Print "hello world1!";
+    }
+}

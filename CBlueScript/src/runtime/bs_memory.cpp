@@ -1,11 +1,4 @@
-/*
-    Author: May Draskovics
-    Date: 10/14/2021
 
-    Description:
-        Generic memory used through out bluescript & libs
-
-*/
 #include "bs_memory.h"
 
 bsMemoryObject bs_memory::bs_NULL( void )
@@ -57,7 +50,7 @@ void bs_memory::getAllKeys( void )
     {
         string key = iter->first;
         string value = iter->second.__str_reper__;
-        cout << key << ":" << value << endl;
+        printf("%s:%s\n", key.c_str(), value.c_str());
     }
 }
 
@@ -121,7 +114,7 @@ void bs_memory::arrayAppend( const string& arrayName, int index, const bsMemoryO
         this->arrayStack[index] = obj;
         return;
     }
-    cout << "Out of range error" << endl;
+    printf("[bs_memory::arrayAppend] Error out of range (%i is out of range for %s)", index, arrayName.c_str());
     exit(21);
 }
 
@@ -140,7 +133,7 @@ void bs_memory::putObjInMemory( const string& _ptrname, const bsMemoryObject& _d
             bsMemoryObject currentVal = this->getVar(_ptrname);
             if (currentVal.__str_reper__ != _data.__str_reper__)
             {
-                cout << "Cannot change an immutable variable" << endl;
+                printf("[bs_memory::putObjInMemory]Cannot change an immutable variable \"%s\"\n", _ptrname.c_str());
                 exit(1);
             }
             else
@@ -171,7 +164,7 @@ int bs_memory::arraySize( const string& arrayName )
             
     if (it == this->bsArraySizes.end())
     {
-        cout << "Array does not exist" << endl;
+        printf("[bs_memory::arraySize]Array does not exist. \"%s\"\n", arrayName.c_str());
         exit(23);
         return -1;
     }
@@ -185,8 +178,8 @@ int bs_memory::indexInArray( const string& arrayName, int index )
     auto it = this->bsArraySizes.find(arrayName);
     if (it == this->bsArraySizes.end())
     {
-        cout << "Array does not exist" << endl;
-        exit(23);
+        printf("[bs_memory::indexInArray]Array does not exist. \"%s\"\n", arrayName.c_str());
+        exit(24);
         return -1;
     }
     ArrayLocs locs = it->second;
@@ -217,7 +210,7 @@ bsMemoryObject bs_memory::getFromArray( const string& arrayName, int index)
         return this->arrayStack[index];
     }
 
-    cout << "Out of range error" << endl;
+    printf("[bs_memory::getFromArray] Out of range error (%i is out of range for %s)\n", index, arrayName.c_str());
     exit(21);
 
     // just so c++ can compile
@@ -255,14 +248,15 @@ bsMemoryObject bs_memory::runMath( const string& line, const int bsMathOper )
 
         if (headVar.isConst)
         {
-            cout << "Cannot change immutable value.\n";
+            printf("The variable '%s' is immutable\n", args[0].c_str());
             exit(1);
         }
     }
+    else
+        tailVar = this->createObject(args[1]);
 
     if (args[1].rfind("%",0) == 0 && this->varExists(split(args[1], "%")[1]))
         tailVar = this->getVar(split(args[1], "%")[1]);
-    
     else
         tailVar = this->createObject(args[1]);
 
@@ -274,7 +268,7 @@ bsMemoryObject bs_memory::runMath( const string& line, const int bsMathOper )
     }
     else
     {
-        long out = bsMath<long>(stol(headVar.__str_reper__), stol(tailVar.__str_reper__), bsMathOper);
+        long out = bsMath<long>(stoi(headVar.__str_reper__), stoi(tailVar.__str_reper__), bsMathOper);
         outObj.__str_reper__ = to_string(out);
     }
 

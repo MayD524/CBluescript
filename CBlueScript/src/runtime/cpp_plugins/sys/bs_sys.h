@@ -13,6 +13,10 @@ using namespace std;
 
 #ifdef _WIN32
     #define OS_NAME "WINDOWS"
+    #include <windows.h>
+    #include <tchar.h>
+    #include <stdio.h>
+    #include <strsafe.h>
     #ifndef BS_SYS_EXPORT
         #ifdef BUILD_DLL
             #define BS_SYS_EXPORT __declspec(dllexport)
@@ -26,20 +30,27 @@ using namespace std;
 #else
     #define OS_NAME "POSIX"
     #define HEADER void
-
+    #include <unistd.h>
+    #include <filesystem>
 #endif
+
 #ifdef __cplusplus
     extern "C"
     {
 #endif
+
     // file system stuff
-    HEADER fileExists(bs_memory* mem, const string& args);
-    HEADER dirExists(bs_memory* mem, const string& args);
-    HEADER exists(bs_memory* mem, const string& args);
+    //HEADER fileExists(bs_memory* mem, const string& args);
+    //HEADER dirExists(bs_memory* mem, const string& args);
+    //HEADER exists(bs_memory* mem, const string& args);
+
+    HEADER listDir(bs_memory* mem, const string& args);
+    HEADER getCWD(bs_memory* mem, const string& args);
+    string getWorkingDirectory( void );
 
     // os related items
-    HEADER osName(bs_memory* mem, const string& args);
-    HEADER sysInfo(bs_memory* mem, const string& args);
+    //HEADER osName(bs_memory* mem, const string& args);
+    //HEADER sysInfo(bs_memory* mem, const string& args);
 
     // load the lib
     HEADER load_lib(map<string, void(*)(bs_memory* mem, const string& args)>* rt);
