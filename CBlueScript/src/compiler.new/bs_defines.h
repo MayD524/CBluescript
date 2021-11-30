@@ -21,6 +21,16 @@ struct token {
     string svalue = "";
 };
 
+struct bs_variable {
+	string name;
+	bool isConst = false;
+	bs_variable (const string& name, const bool& isConst) {
+		this->name = name;
+		this->isConst = isConst;
+	}
+	~bs_variable () {}
+};
+
 struct BS_block {
     string name;
     int type; // 0 = function, 1 = logic if, 2 = logic elif, 3 = logic else,4 = loops
@@ -60,7 +70,6 @@ struct BS_block {
 
 typedef vector<token> token_vector;
 typedef vector<BS_block> block_vector;
-
-
+typedef vector<bs_variable> variable_vector;
 
 #endif
