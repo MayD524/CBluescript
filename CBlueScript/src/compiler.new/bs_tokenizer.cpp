@@ -99,11 +99,6 @@ token_vector BS::tokenizer::tokenizeLine(cstrref line)
 
         else if (isPunctuation(string(1, c)) && !inQuotes)
         {
-            token t;
-            t.isCmd = true;
-            t.ivalue = BS::BS_BINDS[string(1,c)];
-            tokens.push_back(t);
-
             if (word.size() > 0)
             {
                 token t;
@@ -112,6 +107,14 @@ token_vector BS::tokenizer::tokenizeLine(cstrref line)
                 tokens.push_back(t);
                 word = "";
             }
+
+            int tok = BS::BS_BINDS[string(1, c)];
+            if (tok == BS::COMMA) { continue; }
+            token t;
+            t.isCmd = true;
+            t.ivalue = tok;
+            tokens.push_back(t);
+
         }
 
         else

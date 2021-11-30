@@ -6,6 +6,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <map>
+
 #include "UCPPL/UCPPL.h"
 #include "bs_defines.h"
 #include "bs_tokenizer.h"

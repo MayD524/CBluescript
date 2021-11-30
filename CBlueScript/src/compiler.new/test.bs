@@ -2,6 +2,8 @@
 function main(test,test3) {
     Print "hello world!"; // test
     a = 10;
+    a + 2; // works like +=
+    a = a + 2;
     if a == 10 {
     	Print "hello world1!";
     }
