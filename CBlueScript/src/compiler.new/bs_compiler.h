@@ -18,7 +18,7 @@ using namespace std;
 namespace BS
 {
     string_vector cleanComments(string_vector lines);
-    void Compile(cstrref fileName, cstrref outputFileName);
+    string_vector Compile(cstrref fileName, cstrref outputFileName);
 }
 
 

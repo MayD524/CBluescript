@@ -137,7 +137,28 @@ vector<token_vector> BS::tokenizer::tokenize(void)
     vector<token_vector> tokens;
     for (int i = 0; i < this->lines.size(); i++)
     {
-        tokens.push_back(tokenizeLine(this->lines[i]));
+	token_vector t = tokenizeLine(this->lines[i]);
+	// check if its the last line
+	// if it is then we need to add a newline token
+	if (i == this->lines.size() - 1)
+	{
+	    token TEOF;
+	    TEOF.isCmd = true;
+	    TEOF.ivalue = BS::BSEOF;
+	    t.push_back(TEOF);
+	}
+    tokens.push_back(t);
+    }
+    for (int i = 0; i < tokens.size(); i++)
+    {
+        for (int j = 0; j < tokens[i].size(); j++)
+        {
+            if (tokens[i][j].isCmd)
+                printf("%i ", tokens[i][j].ivalue);
+            else
+                printf("%s ", tokens[i][j].svalue);
+        }
+        printf("\n");
     }
     return tokens;
 }

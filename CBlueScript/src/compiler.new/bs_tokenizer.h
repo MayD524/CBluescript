@@ -16,7 +16,8 @@ using namespace std;
 namespace BS
 {
     enum tokens {
-        BS_IFLW,
+	BS_NULL,
+	BS_IFLW,
         BS_ELIFKW,
         BS_ELSEKW,
         BS_WHILEKW,
