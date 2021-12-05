@@ -35,8 +35,7 @@ bool varIsConst(const string & name, const variable_vector & decl) {
   return false;
 }
 
-string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
-  string_vector comp_lines;
+void BS::Compile(cstrref fileName, cstrref outputFileName) {
   string_vector lines = cleanComments(readFile(fileName));
   tokenizer tk = tokenizer(lines);
   vector < token_vector > tokens = tk.tokenize();
@@ -57,9 +56,10 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
   //printf("here\n");
   try {
   for (int i = 0; i < tokens.size(); i++) {
+    curLineNo += 1;
     printf("\n[%i]", i);
     for (int j = 0; j < tokens[i].size(); j++) {
-      //printf("[%i:%i]" , i, j);
+      printf("[%i:%i]", i, j);
       token t = tokens[i][j];
       if (t.isCmd) {
         cout << t.ivalue << " ";
@@ -90,9 +90,14 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
           case BS::NEWOP:
             {
               if (createFunction) {
+                
+                printf("'%s'\n", funcName.c_str());
                 // format a string
                 comp_lines.push_back("label " + funcName);
-                BS_block b = BS_block(funcName, 0);
+                BS_block b;
+                b.name = funcName;
+                b.type = 0;
+                
                 blocks.push_back(b);
                 for (int k = 0; k < function_args.size(); k++) {
                   curLine += function_args[k];
@@ -122,6 +127,9 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
             // end of block
           case BS::CRBAR:
             {
+              // this is what broke everything...
+              // dont change this...
+              if (blocks.size() <= 0) { continue; }
               BS_block b = blocks.back();
               blocks.pop_back();
               b.block_end(comp_lines);
@@ -130,12 +138,13 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               scopes.pop_back();
             }
             break;
-	  case BS::BSEOF:
-	    { 
-	      // return lines
-	      return comp_lines;
-	    }
-	    break;
+          case BS::BSEOF:
+            { 
+              // return lines
+              printf("\nI have finished compiling\n");
+              return;
+            }
+            break;
           default:
             break;
         }
@@ -158,15 +167,24 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               // if it is, error 
               // if it is not, add it to the list of declared variables
               string varName = t.svalue;
-              if (varExists(makeVariableName(scopes.back(), t.svalue), declaredVars)) 
-                varName = "%" + makeVariableName(scopes.back(), t.svalue);
+              if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
+                varName = "%" + makeVariableName(scopes.back(), varName);
               curLine += varName;
                     
               comp_lines.push_back(curLine);
-              curLine = "";
-              } else { continue; }
-              curLine += t.svalue;
+            } 
+            else if (curLine.rfind("out", 0) == 0) {
+              string varName = t.svalue;
+              if (varExists(makeVariableName(scopes.back(), varName), declaredVars))
+                varName = "%" + makeVariableName(scopes.back(), varName);
+              curLine += varName;
+              comp_lines.push_back(curLine);
+            }
+            else { continue; }
+            curLine += t.svalue;
+            
           }
+
           // check what the next token is
           else if (j + 1 < tokens[i].size()) {
             token next = tokens[i][j + 1];
@@ -180,21 +198,25 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
                   if (next.ivalue == BS::EQL)
                     curLine = "mov " + varName + ",";
                   else if (anyInVector < int > (next.ivalue, BS::BS_MATH_TOKENS))
+                  {
                     curLine = "mov " + varName + ",";
+                    if (j + 2 > tokens[i].size()) { continue;}
+                    token next2 = tokens[i][j + 2];
+                    if (!next2.isCmd) {
+                      curLine += next2.svalue;
+                      j ++;
+                    }
+                  }
                 } else {
                   cerr << "Error: variable " << varName << " was declaired as a constant variable." << endl;
                   exit(1);
                 }
+              j ++;
             }
 
           }
-        //cout << t.svalue << " ";
       }
     }
-    //cout << "here " << i << endl;
-    //cout << endl;
-    //for (cstrref line: comp_lines)
-    // cout << line << endl;
   }
   }
   catch (const exception & e) {
@@ -221,5 +243,6 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
     cout << "curLine: " << curLine << endl;
     cout << "funcName: " << funcName << endl;
   }
-  return comp_lines;
+  cout << "here" << endl;
+  return;
 }

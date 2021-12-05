@@ -156,7 +156,7 @@ vector<token_vector> BS::tokenizer::tokenize(void)
             if (tokens[i][j].isCmd)
                 printf("%i ", tokens[i][j].ivalue);
             else
-                printf("%s ", tokens[i][j].svalue);
+                printf("%s ", tokens[i][j].svalue.c_str());
         }
         printf("\n");
     }

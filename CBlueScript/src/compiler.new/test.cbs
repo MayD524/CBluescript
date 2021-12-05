@@ -1,0 +1,12 @@
+; this is expected output
+label main
+pop main_test
+pop main_test3
+out "hello world!"
+mov main_a,10
+add main_a,2
+add main_a,2
+cmp %main_a,10
+jne main_endofif
+out "hello world1!"
+label main_endofif

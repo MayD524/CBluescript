@@ -14,6 +14,8 @@ typedef vector<int> int_vector;
 typedef string& strref;
 typedef const strref cstrref;
 
+inline string_vector comp_lines;
+inline unsigned int curLineNo = 0;
 struct token {
     bool   isCmd  = false;
     int    ivalue = 0;
@@ -34,16 +36,10 @@ struct BS_block {
     string name;
     unsigned int type; // 0 = function, 1 = logic if, 2 = logic elif, 3 = logic else,4 = loops
 
-    BS_block(const string& name, const unsigned int& type)
-    {
-        this->name = name;
-        this->type = type;
-    }
-    ~BS_block() {}
-
     void block_end( string_vector& comp_lines )
     {
 	//if (this->type == 49) return;
+    if (this->type > 4) return;
 	switch (this->type)
         {
             case 0:
@@ -62,7 +58,7 @@ struct BS_block {
                 comp_lines.push_back("label " + this->name + "_endofloop");
                 break;
             default:
-		printf("Error: Unknown block type\nType:%i\nName:'%s'\n", this->type, this->name);
+		printf("Error: Unknown block type\nType:%u\nName:'%s'\n", this->type, this->name.c_str());
 		throw("Error: Unknown block type");
                 //exit(1);
         }

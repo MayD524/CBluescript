@@ -43,9 +43,9 @@ int main(int argc, char** argv)
         outFile = "a.cbs";
     }
     
-    string_vector cmp_lines = BS::Compile(inpFile, outFile);
-    for (cstrref line : cmp_lines) {
-	cout << line << endl;
+    BS::Compile(inpFile, outFile);
+    for (cstrref line : comp_lines) {
+	    cout << line << endl;
     }
 }
 

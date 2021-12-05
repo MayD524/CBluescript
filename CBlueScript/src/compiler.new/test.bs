@@ -1,5 +1,4 @@
-
-function main(test,test3) {
+function main() {
     Print "hello world!"; // test
     a = 10;
     a + 2; // works like +=
@@ -7,4 +6,4 @@ function main(test,test3) {
     if a == 10 {
     	Print "hello world1!";
     }
-}
+};
