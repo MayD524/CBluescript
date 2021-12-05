@@ -1,6 +1,10 @@
 # vscode
 .vscode/
 
+# old files
+*.old.*
+*.old
+
 # python
 __pycache__/
 *.pyc
