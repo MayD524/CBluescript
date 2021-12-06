@@ -41,10 +41,11 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
   vector < token_vector > tokens = tk.tokenize();
   block_vector blocks;
 
-  bool createFunction = false;
+  bool createFunction  = false;
   bool readingFuncArgs = false;
-  bool isConst = false;
-  bool isGlobal = false;
+  bool functionCall    = false;
+  bool isConst         = false;
+  bool isGlobal        = false;
 
   string funcName;
   string curLine = "";
@@ -53,7 +54,6 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
   variable_vector declaredVars;
 
   scopes.push_back("main");
-  //printf("here\n");
   try {
   for (int i = 0; i < tokens.size(); i++) {
     curLineNo += 1;
@@ -87,11 +87,12 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
           case BS::BS_WHILEKW:
             break;
 
+          case BS::BS_RETURN:
+            break;
+
           case BS::NEWOP:
-            {
+            {   
               if (createFunction) {
-                
-                printf("'%s'\n", funcName.c_str());
                 // format a string
                 comp_lines.push_back("label " + funcName);
                 BS_block b;
@@ -111,7 +112,21 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
                 function_args.clear();
                 createFunction = false;
               }
+              else if (functionCall) {
+                for (cstrref arg: function_args)
+                {
+                  string varName = makeVariableName(scopes.back(), arg);
+                  if (varExists(varName, declaredVars)) 
+                    comp_lines.push_back("push %" + varName);
+                  else 
+                    comp_lines.push_back("push " + arg);
+                  
+                }
+                functionCall = false;
+              }
+
               if (curLine.size() > 0) {
+                printf("\n'%s'\n", curLine.c_str());
                 comp_lines.push_back(curLine);
                 curLine = "";
               }
@@ -150,39 +165,35 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
         }
         } else {
           cout << t.svalue << " ";
-          if (readingFuncArgs)
+          if (readingFuncArgs) 
             function_args.push_back(t.svalue);
+          
+          else if (functionCall) {
+            function_args.push_back(t.svalue);
+          }
 
-          if (createFunction && !readingFuncArgs) {
+          else if (createFunction && !readingFuncArgs) {
             funcName = t.svalue;
             scopes.push_back(funcName);
           }
 
-          if (curLine.size() > 0) {
+          else if (curLine.size() > 0) {
             // check if curline starts with mov
             if (curLine.rfind("mov", 0) == 0) {
               // check if variable is already declared
-              // if not, add it to the list of declared variables
-              // if it is, check if it is a constant
-              // if it is, error 
-              // if it is not, add it to the list of declared variables
               string varName = t.svalue;
               if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
                 varName = "%" + makeVariableName(scopes.back(), varName);
               curLine += varName;
                     
-              comp_lines.push_back(curLine);
             } 
             else if (curLine.rfind("out", 0) == 0) {
               string varName = t.svalue;
               if (varExists(makeVariableName(scopes.back(), varName), declaredVars))
                 varName = "%" + makeVariableName(scopes.back(), varName);
-              curLine += varName;
-              comp_lines.push_back(curLine);
+              curLine += varName + " ";
             }
-            else { continue; }
-            curLine += t.svalue;
-            
+            else { continue; }            
           }
 
           // check what the next token is
@@ -192,26 +203,52 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
               string varName = makeVariableName(scopes.back(), t.svalue);
               if (!varIsConst(varName, declaredVars)) {
                   bs_variable var = bs_variable(varName, isConst);
-                  //comp_lines.push_back("pop " + varName);
                   declaredVars.push_back(var);
 
                   if (next.ivalue == BS::EQL)
                     curLine = "mov " + varName + ",";
+                  
                   else if (anyInVector < int > (next.ivalue, BS::BS_MATH_TOKENS))
                   {
-                    curLine = "mov " + varName + ",";
-                    if (j + 2 > tokens[i].size()) { continue;}
+                    // run op= math
+                    switch(next.ivalue) {
+                      case BS::MATH_ADDOP:
+                        curLine = "add " + varName + ",";
+                        break;
+                      case BS::MATH_SUBOP:
+                        curLine = "sub " + varName + ",";
+                        break;
+                      case BS::MATH_MULOP:
+                        curLine = "mul " + varName + ",";
+                        break;
+                      case BS::MATH_DIVOP:
+                        curLine = "div " + varName + ",";
+                        break;
+                    }
+                    
+                    if (j + 2 > tokens[i].size()) { continue; }
                     token next2 = tokens[i][j + 2];
                     if (!next2.isCmd) {
-                      curLine += next2.svalue;
+                      string varName = makeVariableName(scopes.back(), next2.svalue);
+                      if (varExists(varName, declaredVars))
+                        curLine += "%" + varName;
+                      else
+                        curLine += next2.svalue;
+                      curLine += " ";
                       j ++;
                     }
                   }
-                } else {
-                  cerr << "Error: variable " << varName << " was declaired as a constant variable." << endl;
-                  exit(1);
-                }
-              j ++;
+                  else if (next.ivalue == BS::LPAR) {
+
+                    functionCall = !createFunction;
+                    curLine = "call " + t.svalue;
+                  }
+                  j++;
+                } 
+              else {
+                cerr << "Error: variable " << varName << " was declaired as a constant variable." << endl;
+                exit(1);
+              }
             }
 
           }
@@ -219,6 +256,8 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
     }
   }
   }
+  // something went wrong
+  // print everything out and hopefully it helps
   catch (const exception & e) {
     cerr << "Error: " << e.what() << endl;
     cout << "-----------\nLines: " << endl;

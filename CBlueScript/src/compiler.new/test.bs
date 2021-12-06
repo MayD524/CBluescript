@@ -1,8 +1,14 @@
+function test(ab) {
+    Print ab;
+}
+
 function main() {
     Print "hello world!"; // test
     a = 10;
-    a + 2; // works like +=
+    a + a; // works like +=
     a = a + 2;
+    Print a;
+    test(a);
     if a == 10 {
     	Print "hello world1!";
     }

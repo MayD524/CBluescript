@@ -120,7 +120,7 @@ token_vector BS::tokenizer::tokenizeLine(cstrref line)
         else
         {
 	    if (c != '"')
-            	word += c;
+            word += c;
         }
     }
     if (inQuotes)
