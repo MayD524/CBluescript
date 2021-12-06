@@ -13,6 +13,17 @@ string_vector BS::cleanComments(string_vector lines) {
   return cleanLines;
 }
 
+string_vector BS::getCBSlibs(const string& cbs_include) { 
+  string_vector lines = readFile(cbs_include);
+  return lines;
+}
+
+string_vector BS::getBS(const string& bs_include) {
+  string_vector lines = readFile(bs_include);
+  string_vector cleanLines = cleanComments(lines);
+  return cleanLines;
+}
+
 string makeVariableName(const string & scope, const string & name) {
   return scope + "_" + name;
 }
@@ -35,7 +46,7 @@ bool varIsConst(const string & name, const variable_vector & decl) {
   return false;
 }
 
-void BS::Compile(cstrref fileName, cstrref outputFileName) {
+string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
   string_vector lines = cleanComments(readFile(fileName));
   tokenizer tk = tokenizer(lines);
   vector < token_vector > tokens = tk.tokenize();
@@ -47,8 +58,10 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
   bool isConst         = false;
   bool isGlobal        = false;
 
+  string includeFileExt = ".bs";
   string funcName;
   string curLine = "";
+  string_vector comp_lines;
   string_vector function_args;
   string_vector scopes;
   variable_vector declaredVars;
@@ -82,12 +95,77 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
               // write and reset function args
             }
             break;
+          
+          case BS::BS_CONST:
+            {
+              isConst = true;
+            }
+            break;
+
+          case BS::BS_SET:
+          {
+            if (j + 1 < tokens[i].size()) {
+              token next = tokens[i][j + 1];
+              if (next.isCmd) {
+                printf("Error at line %i: Expected extension name after 'set'\n", curLineNo);
+                exit(1);
+              }
+              includeFileExt = next.svalue.rfind(".", 0) != 0 ? "." + next.svalue : next.svalue;
+            }
+          }
+          break;
+          case BS::BSINCLUDE:
+          {
+            if (j + 1 < tokens[i].size()) {
+            {
+              token next = tokens[i][j + 1];
+              if (next.isCmd) { 
+                printf("Error at line %i: Expected string after #include\n", curLineNo);
+                exit(1);
+              }
+              string_vector includeLines;
+              string fName;
+              string oName;
+              if (includeFileExt == ".bs") {
+                
+                fName = next.svalue + ".bs";
+                oName = next.svalue + ".cbs";
+                includeLines = getBS(fName);
+                string_vector cmp_lines = Compile(fName, oName);
+                for (cstrref l : cmp_lines) {
+                  comp_lines.push_back(l);
+                }
+              }
+              else if (includeFileExt == ".cbs") {
+                fName = next.svalue + ".cbs";
+                includeLines = getCBSlibs(fName);
+                for (cstrref line: includeLines) {
+                  comp_lines.push_back(line);
+                }
+              }
+              else {
+                printf("Error at line %i: Unknown or unsupported extension '%s'\n", curLineNo, includeFileExt.c_str());
+                exit(1);
+              }
+            }
+          }
+          break;
 
           case BS::BS_FORKW:
           case BS::BS_WHILEKW:
             break;
 
           case BS::BS_RETURN:
+            {
+              if (j + 1 < tokens[i].size()) {
+                token next = tokens[i][j + 1];
+                if (!next.isCmd) {
+                  string vName = makeVariableName(scopes.back(), next.svalue);
+                  comp_lines.push_back(varExists(vName, declaredVars) ? "push %" + vName : "push " + next.svalue);
+                } 
+                comp_lines.push_back("ret");
+              }
+            }
             break;
 
           case BS::NEWOP:
@@ -100,8 +178,8 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
                 b.type = 0;
                 
                 blocks.push_back(b);
+                // this here pushes args (pop arg_name)
                 for (int k = 0; k < function_args.size(); k++) {
-                  curLine += function_args[k];
                   string varName = makeVariableName(funcName, function_args[k]);
                   if (!varIsConst(varName, declaredVars)) {
                     bs_variable var = bs_variable(varName, isConst);
@@ -116,17 +194,12 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
                 for (cstrref arg: function_args)
                 {
                   string varName = makeVariableName(scopes.back(), arg);
-                  if (varExists(varName, declaredVars)) 
-                    comp_lines.push_back("push %" + varName);
-                  else 
-                    comp_lines.push_back("push " + arg);
-                  
+                  comp_lines.push_back(varExists(varName, declaredVars) ? "push %" + varName : "push " + arg);
                 }
                 functionCall = false;
               }
 
               if (curLine.size() > 0) {
-                printf("\n'%s'\n", curLine.c_str());
                 comp_lines.push_back(curLine);
                 curLine = "";
               }
@@ -157,12 +230,12 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
             { 
               // return lines
               printf("\nI have finished compiling\n");
-              return;
+              return comp_lines;
             }
             break;
           default:
             break;
-        }
+        }}
         } else {
           cout << t.svalue << " ";
           if (readingFuncArgs) 
@@ -283,5 +356,5 @@ void BS::Compile(cstrref fileName, cstrref outputFileName) {
     cout << "funcName: " << funcName << endl;
   }
   cout << "here" << endl;
-  return;
+  return comp_lines;
 }

@@ -12,9 +12,10 @@ using namespace std;
 typedef vector<string> string_vector;
 typedef vector<int> int_vector;
 typedef string& strref;
+typedef const string cstr;
 typedef const strref cstrref;
 
-inline string_vector comp_lines;
+//inline string_vector comp_lines;
 inline unsigned int curLineNo = 0;
 struct token {
     bool   isCmd  = false;

@@ -1,6 +1,4 @@
-function test(ab) {
-    Print ab;
-}
+#include inc.bs
 
 function main() {
     Print "hello world!"; // test

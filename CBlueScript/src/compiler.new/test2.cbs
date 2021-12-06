@@ -1,0 +1,16 @@
+jmp main
+label test_func
+pop test_func_t
+out %test_func_t 
+ret
+ret
+label main
+out hello world! 
+mov main_a,10
+add main_a,%main_a 
+mov main_a,%main_a2
+out %main_a 
+push %main_a
+call test
+out hello world1! 
+ret

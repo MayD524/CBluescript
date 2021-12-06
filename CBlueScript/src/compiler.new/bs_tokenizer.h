@@ -56,6 +56,8 @@ namespace BS
         NEWOP,
         NUMASSTR,
 
+        BS_SET,
+        BSINCLUDE,
         BSEOF
     };
 
@@ -110,6 +112,8 @@ namespace BS
         {",", COMMA},
         {"\\", BSLASH},
         {";", NEWOP},
+        {"#set", BS_SET},
+        {"#include", BSINCLUDE},
         {"EOF", BSEOF}
     };
 

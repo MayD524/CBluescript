@@ -26,12 +26,8 @@ int main(int argc, char** argv)
           .help("The input file name")
           .required();
 
-    try {
-        parser.parse_args(argc, argv);
-    } catch (const exception& e) {
-        cerr << e.what() << endl;
-        return 1;
-    }
+    parser.parse_args(argc, argv);
+
 
     string inpFile = parser.get<string>("file");
     string outFile;
@@ -43,10 +39,18 @@ int main(int argc, char** argv)
         outFile = "a.cbs";
     }
     
-    BS::Compile(inpFile, outFile);
+    string_vector comp_lines = BS::Compile(inpFile, outFile);
+    comp_lines.insert(comp_lines.begin(), "jmp main");
     for (cstrref line : comp_lines) {
 	    cout << line << endl;
     }
+
+    // create the output file and write the compiled code to it
+    ofstream outFileHandler(outFile);
+    for (cstrref line : comp_lines) {
+        outFileHandler << line << endl;
+    }
+    outFileHandler.close();
 }
 
 

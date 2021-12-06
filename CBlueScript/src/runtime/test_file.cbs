@@ -1,13 +1,17 @@
 jmp main
-label test
-pop test.a
-push %test.a
+label test_func
+pop test_func_t
+out %test_func_t
+out \n
+ret
 ret
 label main
-push test
-push hello world
-call test
-pop main.a
-out %main.a
-jmp BS_EOF_JUMP_POINT
-label BS_EOF_JUMP_POINT
+out hello world!\n
+mov main_a,10
+add main_a,%main_a
+out %main_a
+out \n
+push %main_a
+call test_func
+out hello world1!\n
+ret

@@ -241,4 +241,12 @@ inline vector<string> readFile(string Filename)
 
     return lines;
 }
+
+// check if file ends with extension
+inline bool endsWith(const string& str, const string& suffix)
+{
+    return str.substr(str.size() - suffix.size(), str.size()) == suffix;
+}
+
+
 #endif
