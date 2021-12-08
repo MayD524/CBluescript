@@ -17,7 +17,7 @@ namespace BS
 {
     enum tokens {
         BS_NULL,
-        BS_IFLW,
+        BS_IFKW,
         BS_ELIFKW,
         BS_ELSEKW,
         BS_WHILEKW,
@@ -78,7 +78,7 @@ namespace BS
     };
 
     inline map<string, int> BS_BINDS = {
-        {"if", BS_IFLW},
+        {"if", BS_IFKW},
         {"elif", BS_ELIFKW},
         {"else", BS_ELSEKW},
         {"while", BS_WHILEKW},

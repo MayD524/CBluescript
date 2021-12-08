@@ -57,6 +57,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
   bool functionCall    = false;
   bool isConst         = false;
   bool isGlobal        = false;
+  bool readCmp         = false;
 
   string includeFileExt = ".bs";
   string funcName;
@@ -101,6 +102,31 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               isConst = true;
             }
             break;
+
+	  case BS::BS_IFKW:
+	    {
+	      BS_block ifBlock;
+	      ifBlock.type = 1;
+	      ifBlock.name = "if " + to_string(i+j);
+	      blocks.push_back(ifBlock);
+	    }
+	    break;
+	  case BS::BS_ELIFKW:
+	    {
+	      BS_block elifBlock;
+	      elifBlock.type = 2;
+	      elifBlock.name = "elif " + to_string(i+j);
+	      blocks.push_back(elifBlock);
+	    }
+	    break;
+	  case BS::BS_ELSEKW:
+	    {
+	      BS_block elseBlock;
+	      elseBlock.type = 3;
+	      elseBlock.name = "else " + to_string(i+j);
+	      blocks.push_back(elseBlock);
+	    }
+	    break;
 
           case BS::BS_SET:
           {
@@ -153,7 +179,14 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
 
           case BS::BS_FORKW:
           case BS::BS_WHILEKW:
-            break;
+	  {
+	    string label = "label " + to_string(loopIDNum) + "endofloop";
+	    BS_block block;
+	    block.name = to_string(loopIDNum);
+	    block.type = 4;
+	    loopIDNum++;
+	  }
+	  break;
 
           case BS::BS_RETURN:
             {
@@ -249,6 +282,18 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
             funcName = t.svalue;
             scopes.push_back(funcName);
           }
+
+	  else if (blocks.size() > 0 && readCmp) {
+	   	BS_block b = blocks.back();
+		token next = tokens[i][j + 1];
+		j++;
+		if (next.isCmd) {
+		    auto it = BS::BS_LOGIC_TOKENS;
+		    //if (it != BS::BS_LOGIC_TOKENS.end()) {
+		    //     b.jmp_str = it->second + " " + b.name; 
+		    //}
+		}
+	  }
 
           else if (curLine.size() > 0) {
             // check if curline starts with mov

@@ -17,6 +17,7 @@ typedef const strref cstrref;
 
 //inline string_vector comp_lines;
 inline unsigned int curLineNo = 0;
+inline unsigned int loopIDNum = 0;
 struct token {
     bool   isCmd  = false;
     int    ivalue = 0;
@@ -36,6 +37,8 @@ struct bs_variable {
 struct BS_block {
     string name;
     unsigned int type; // 0 = function, 1 = logic if, 2 = logic elif, 3 = logic else,4 = loops
+    string cmp_str;
+    string jmp_str;
 
     void block_end( string_vector& comp_lines )
     {
@@ -56,7 +59,9 @@ struct BS_block {
                 comp_lines.push_back("label " + this->name + "_endofelse");
                 break;
             case 4:
-                comp_lines.push_back("label " + this->name + "_endofloop");
+		comp_lines.push_back(cmp_str);
+		comp_lines.push_back(jmp_str);
+                //comp_lines.push_back("label " + this->name + "_endofloop");
                 break;
             default:
 		printf("Error: Unknown block type\nType:%u\nName:'%s'\n", this->type, this->name.c_str());
