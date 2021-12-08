@@ -12,5 +12,8 @@ mov main_a,%main_a2
 out %main_a 
 push %main_a
 call test
+cmp %main_a,10
+
 out hello world1! 
+label if8
 ret

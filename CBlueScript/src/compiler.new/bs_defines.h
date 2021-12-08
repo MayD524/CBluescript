@@ -24,6 +24,13 @@ struct token {
     string svalue = "";
 };
 
+#define BS_FUNCTION_BLOCK 0
+#define BS_IF_BLOCK       1
+#define BS_ELIF_BLOCK     2
+#define BS_ELSE_BLOCK     3
+#define BS_WHILE_BLOCK    4
+
+
 struct bs_variable {
 	string name;
 	bool isConst = false;
@@ -46,21 +53,21 @@ struct BS_block {
     if (this->type > 4) return;
 	switch (this->type)
         {
-            case 0:
+            case BS_FUNCTION_BLOCK:
                 comp_lines.push_back("ret");
                 break;
-            case 1:
-                comp_lines.push_back("label " + this->name + "_endofif");
+            case BS_IF_BLOCK:
+                comp_lines.push_back("label " + this->name);
                 break;
-            case 2:
-                comp_lines.push_back("label " + this->name + "_endofelif");
+            case BS_ELIF_BLOCK:
+                comp_lines.push_back("label " + this->name);
                 break;
-            case 3:
-                comp_lines.push_back("label " + this->name + "_endofelse");
+            case BS_ELSE_BLOCK:
+                comp_lines.push_back("label " + this->name);
                 break;
-            case 4:
-		comp_lines.push_back(cmp_str);
-		comp_lines.push_back(jmp_str);
+            case BS_WHILE_BLOCK:
+                comp_lines.push_back(cmp_str);
+                comp_lines.push_back(jmp_str);
                 //comp_lines.push_back("label " + this->name + "_endofloop");
                 break;
             default:

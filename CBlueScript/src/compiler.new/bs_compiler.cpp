@@ -107,86 +107,94 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
 	    {
 	      BS_block ifBlock;
 	      ifBlock.type = 1;
-	      ifBlock.name = "if " + to_string(i+j);
+	      ifBlock.name = "if" + to_string(i+j);
 	      blocks.push_back(ifBlock);
+        curLine += "cmp ";
+        readCmp = true;
 	    }
 	    break;
 	  case BS::BS_ELIFKW:
 	    {
 	      BS_block elifBlock;
 	      elifBlock.type = 2;
-	      elifBlock.name = "elif " + to_string(i+j);
+	      elifBlock.name = "elif" + to_string(i+j);
 	      blocks.push_back(elifBlock);
+        curLine += "cmp ";
+        readCmp = true;
 	    }
 	    break;
 	  case BS::BS_ELSEKW:
 	    {
 	      BS_block elseBlock;
 	      elseBlock.type = 3;
-	      elseBlock.name = "else " + to_string(i+j);
+	      elseBlock.name = "else" + to_string(i+j);
 	      blocks.push_back(elseBlock);
+        curLine += "cmp ";
+        readCmp = true;
 	    }
 	    break;
 
-          case BS::BS_SET:
-          {
-            if (j + 1 < tokens[i].size()) {
-              token next = tokens[i][j + 1];
-              if (next.isCmd) {
-                printf("Error at line %i: Expected extension name after 'set'\n", curLineNo);
-                exit(1);
-              }
-              includeFileExt = next.svalue.rfind(".", 0) != 0 ? "." + next.svalue : next.svalue;
-            }
+      case BS::BS_SET:
+      {
+        if (j + 1 < tokens[i].size()) {
+          token next = tokens[i][j + 1];
+          if (next.isCmd) {
+            printf("Error at line %i: Expected extension name after 'set'\n", curLineNo);
+            exit(1);
           }
-          break;
-          case BS::BSINCLUDE:
-          {
-            if (j + 1 < tokens[i].size()) {
-            {
-              token next = tokens[i][j + 1];
-              if (next.isCmd) { 
-                printf("Error at line %i: Expected string after #include\n", curLineNo);
-                exit(1);
-              }
-              string_vector includeLines;
-              string fName;
-              string oName;
-              if (includeFileExt == ".bs") {
-                
-                fName = next.svalue + ".bs";
-                oName = next.svalue + ".cbs";
-                includeLines = getBS(fName);
-                string_vector cmp_lines = Compile(fName, oName);
-                for (cstrref l : cmp_lines) {
-                  comp_lines.push_back(l);
-                }
-              }
-              else if (includeFileExt == ".cbs") {
-                fName = next.svalue + ".cbs";
-                includeLines = getCBSlibs(fName);
-                for (cstrref line: includeLines) {
-                  comp_lines.push_back(line);
-                }
-              }
-              else {
-                printf("Error at line %i: Unknown or unsupported extension '%s'\n", curLineNo, includeFileExt.c_str());
-                exit(1);
-              }
-            }
-          }
-          break;
+          includeFileExt = next.svalue.rfind(".", 0) != 0 ? "." + next.svalue : next.svalue;
+        }
+      }
+      break;
 
-          case BS::BS_FORKW:
-          case BS::BS_WHILEKW:
-	  {
-	    string label = "label " + to_string(loopIDNum) + "endofloop";
-	    BS_block block;
-	    block.name = to_string(loopIDNum);
-	    block.type = 4;
-	    loopIDNum++;
-	  }
-	  break;
+      case BS::BSINCLUDE:
+      {
+        if (j + 1 < tokens[i].size()) {
+          {
+          token next = tokens[i][j + 1];
+          if (next.isCmd) { 
+            printf("Error at line %i: Expected string after #include\n", curLineNo);
+            exit(1);
+          }
+          string_vector includeLines;
+          string fName;
+          string oName;
+          if (includeFileExt == ".bs") {
+                
+            fName = next.svalue + ".bs";
+            oName = next.svalue + ".cbs";
+            includeLines = getBS(fName);
+            string_vector cmp_lines = Compile(fName, oName);
+            for (cstrref l : cmp_lines) {
+              comp_lines.push_back(l);
+            }
+          }
+          else if (includeFileExt == ".cbs") {
+            fName = next.svalue + ".cbs";
+            includeLines = getCBSlibs(fName);
+            for (cstrref line: includeLines) {
+              comp_lines.push_back(line);
+            }
+          }
+          else {
+            printf("Error at line %i: Unknown or unsupported extension '%s'\n", curLineNo, includeFileExt.c_str());
+            exit(1);
+          }
+        }
+      }
+      break;
+
+      case BS::BS_FORKW:
+      case BS::BS_WHILEKW:
+      {
+        string label = "label " + to_string(loopIDNum);
+        BS_block block;
+        block.name = to_string(loopIDNum);
+        block.type = 4;
+        loopIDNum++;
+        readCmp = true;
+      }
+      break;
 
           case BS::BS_RETURN:
             {
@@ -203,6 +211,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
 
           case BS::NEWOP:
             {   
+              readCmp = false;
               if (createFunction) {
                 // format a string
                 comp_lines.push_back("label " + funcName);
@@ -234,6 +243,12 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
 
               if (curLine.size() > 0) {
                 comp_lines.push_back(curLine);
+                if (curLine.rfind("cmp", 0) == 0 && blocks.size() > 0) {
+                  BS_block b = blocks.back();
+                  if (b.type < BS_WHILE_BLOCK && b.type > BS_FUNCTION_BLOCK) {
+                    comp_lines.push_back(b.jmp_str);
+                  }
+                }
                 curLine = "";
               }
             }
@@ -283,17 +298,26 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
             scopes.push_back(funcName);
           }
 
-	  else if (blocks.size() > 0 && readCmp) {
-	   	BS_block b = blocks.back();
-		token next = tokens[i][j + 1];
-		j++;
-		if (next.isCmd) {
-		    auto it = BS::BS_LOGIC_TOKENS;
-		    //if (it != BS::BS_LOGIC_TOKENS.end()) {
-		    //     b.jmp_str = it->second + " " + b.name; 
-		    //}
-		}
-	  }
+          else if (blocks.size() > 0 && readCmp) {
+            if (curLine.rfind("cmp", 0) == 0) {
+              string varName = t.svalue;
+              if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
+                varName = "%" + makeVariableName(scopes.back(), varName);
+              curLine += curLine.find(",") == string::npos ? varName + "," : varName;
+            } else {
+              printf("Error at line %i: Expected 'cmp' after a compair [Internal error]\n", curLineNo);
+              exit(2);
+            }
+            BS_block b = blocks.back();
+            token next = tokens[i][j + 1];
+            j++;
+            if (next.isCmd) {
+              auto it = BS::BS_LOGIC_TOKENS.find(next.ivalue);
+              if (it != BS::BS_LOGIC_TOKENS.end()) {
+                  b.jmp_str = it->second + " " + b.name; 
+              }
+            }
+          }
 
           else if (curLine.size() > 0) {
             // check if curline starts with mov
@@ -305,6 +329,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               curLine += varName;
                     
             } 
+
             else if (curLine.rfind("out", 0) == 0) {
               string varName = t.svalue;
               if (varExists(makeVariableName(scopes.back(), varName), declaredVars))
