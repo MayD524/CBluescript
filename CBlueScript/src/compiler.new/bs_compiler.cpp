@@ -246,6 +246,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
                 if (curLine.rfind("cmp", 0) == 0 && blocks.size() > 0) {
                   BS_block b = blocks.back();
                   if (b.type < BS_WHILE_BLOCK && b.type > BS_FUNCTION_BLOCK) {
+	            printf("Here '%s'\n", b.name.c_str());
                     comp_lines.push_back(b.jmp_str);
                   }
                 }
@@ -269,9 +270,11 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               BS_block b = blocks.back();
               blocks.pop_back();
               b.block_end(comp_lines);
-              if (createFunction)
+              if (createFunction) {
                 createFunction = false;
-              scopes.pop_back();
+              	scopes.pop_back();
+	      }
+	      //blocks.pop_back();
             }
             break;
           case BS::BSEOF:
@@ -309,14 +312,39 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               exit(2);
             }
             BS_block b = blocks.back();
+	    blocks.pop_back();
             token next = tokens[i][j + 1];
             j++;
             if (next.isCmd) {
-              auto it = BS::BS_LOGIC_TOKENS.find(next.ivalue);
-              if (it != BS::BS_LOGIC_TOKENS.end()) {
-                  b.jmp_str = it->second + " " + b.name; 
-              }
+	      if (b.type == BS_WHILE_BLOCK) {
+              	auto it = BS::BS_LOGIC_TOKENS.find(next.ivalue);
+              	if (it != BS::BS_LOGIC_TOKENS.end()) {
+			//printf("Here at iscmd 320\n");
+			b.jmp_str = it->second + " " + b.name;
+			//printf("%s : %s\n", b.name.c_str(), b.jmp_str.c_str());
+	      	}
+		else {
+			printf("Error at line %i: Expected a logic operator\n", curLineNo);
+			exit(1);
+		}
+
+	      }
+	      else {
+		auto it1 = BS::BS_LOGIC_TOKENS.find(next.ivalue);
+		if (it1 == BS::BS_LOGIC_TOKENS.end()) {
+			printf("Error at line %i: Expected a logic operator\n", curLineNo);
+			exit(1);
+		}
+		auto it2 = BS::BS_LOGIC_OPPOSITES.find(it1->second);
+		if (it2 != BS::BS_LOGIC_OPPOSITES.end()) 
+			b.jmp_str = it2->second + " " + b.name;
+		else {
+			printf("Error at line %i: Expected a compair\n", curLineNo);
+			exit(1);
+		}
+	      }
             }
+	    blocks.push_back(b);
           }
 
           else if (curLine.size() > 0) {

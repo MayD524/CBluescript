@@ -74,7 +74,17 @@ namespace BS
         {LOGIC_JGEOP, "jge"},
         {LOGIC_JNGOP, "jng"},
         {LOGIC_JGOP, "jg"},
-        {LOGIC_JGEOPS, "jge"}
+        {LOGIC_JGEOPS, "jle"}
+    };
+
+    inline map<cstr, cstr> BS_LOGIC_OPPOSITES = {
+	{"je", "jne"},
+	{"jne", "je"},
+	{"jng", "jg"},
+	{"jg", "jng"},
+	{"jng", "jg"},
+	{"jge", "jle"},
+	{"jle", "jge"}
     };
 
     inline map<string, int> BS_BINDS = {

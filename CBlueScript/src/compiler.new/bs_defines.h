@@ -18,6 +18,7 @@ typedef const strref cstrref;
 //inline string_vector comp_lines;
 inline unsigned int curLineNo = 0;
 inline unsigned int loopIDNum = 0;
+
 struct token {
     bool   isCmd  = false;
     int    ivalue = 0;
