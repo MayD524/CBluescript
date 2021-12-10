@@ -1,4 +1,4 @@
 jmp main
 label main
-mov main_a,102
+mov main_a,Hello world 
 ret

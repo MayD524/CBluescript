@@ -375,7 +375,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
                 string varName = t.svalue;
                 if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
                   varName = "%" + makeVariableName(scopes.back(), varName);
-                curLine += varName;
+                curLine += varName + " ";
               }
             } 
 
