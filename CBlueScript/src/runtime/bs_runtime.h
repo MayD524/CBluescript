@@ -118,7 +118,6 @@ public:
             cout << "Eql Flag:" << this->eqlFlag << endl;
             cout << "Grt Flag:" << this->grtFlag << endl;
         }
-        //debug(cmd);
         switch (cmd)
         {
             case 337: // not
@@ -295,6 +294,15 @@ public:
                 }
                 
 
+                break;
+            }
+
+            case 315: // jle
+            {
+                if (this->eqlFlag == true || this->grtFlag == false)
+                {
+                    this->run_jmp(cmd_args);
+                }
                 break;
             }
 

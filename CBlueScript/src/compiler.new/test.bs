@@ -1,13 +1,3 @@
-#include inc.bs
-
 function main() {
-    Print "hello world!"; // test
-    a = 10;
-    a + a; // works like +=
-    a = a + 2;
-    Print a;
-    test(a);
-    if a == 10 {
-    	Print "hello world1!";
-    }
+    a = 10 + 2;
 };

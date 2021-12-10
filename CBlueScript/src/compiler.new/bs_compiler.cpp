@@ -59,13 +59,16 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
   bool isGlobal        = false;
   bool readCmp         = false;
 
-  string includeFileExt = ".bs";
-  string funcName;
-  string curLine = "";
+  variable_vector declaredVars;
+  
   string_vector comp_lines;
   string_vector function_args;
   string_vector scopes;
-  variable_vector declaredVars;
+  
+  string includeFileExt = ".bs";
+  string curLine = "";
+  string curVar = "";
+  string funcName;
 
   scopes.push_back("main");
   try {
@@ -113,88 +116,88 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
         readCmp = true;
 	    }
 	    break;
-	  case BS::BS_ELIFKW:
-	    {
-	      BS_block elifBlock;
-	      elifBlock.type = 2;
-	      elifBlock.name = "elif" + to_string(i+j);
-	      blocks.push_back(elifBlock);
-        curLine += "cmp ";
-        readCmp = true;
-	    }
-	    break;
-	  case BS::BS_ELSEKW:
-	    {
-	      BS_block elseBlock;
-	      elseBlock.type = 3;
-	      elseBlock.name = "else" + to_string(i+j);
-	      blocks.push_back(elseBlock);
-        curLine += "cmp ";
-        readCmp = true;
-	    }
-	    break;
+	    case BS::BS_ELIFKW:
+        {
+          BS_block elifBlock;
+          elifBlock.type = 2;
+          elifBlock.name = "elif" + to_string(i+j);
+          blocks.push_back(elifBlock);
+          curLine += "cmp ";
+          readCmp = true;
+        }
+        break;
+	    case BS::BS_ELSEKW:
+        {
+          BS_block elseBlock;
+          elseBlock.type = 3;
+          elseBlock.name = "else" + to_string(i+j);
+          blocks.push_back(elseBlock);
+          curLine += "cmp ";
+          readCmp = true;
+        }
+        break;
 
       case BS::BS_SET:
-      {
-        if (j + 1 < tokens[i].size()) {
-          token next = tokens[i][j + 1];
-          if (next.isCmd) {
-            printf("Error at line %i: Expected extension name after 'set'\n", curLineNo);
-            exit(1);
+        {
+          if (j + 1 < tokens[i].size()) {
+            token next = tokens[i][j + 1];
+            if (next.isCmd) {
+              printf("Error at line %i: Expected extension name after 'set'\n", curLineNo);
+              exit(1);
+            }
+            includeFileExt = next.svalue.rfind(".", 0) != 0 ? "." + next.svalue : next.svalue;
           }
-          includeFileExt = next.svalue.rfind(".", 0) != 0 ? "." + next.svalue : next.svalue;
         }
-      }
-      break;
+        break;
 
       case BS::BSINCLUDE:
-      {
-        if (j + 1 < tokens[i].size()) {
-          {
-          token next = tokens[i][j + 1];
-          if (next.isCmd) { 
-            printf("Error at line %i: Expected string after #include\n", curLineNo);
-            exit(1);
-          }
-          string_vector includeLines;
-          string fName;
-          string oName;
-          if (includeFileExt == ".bs") {
-                
-            fName = next.svalue + ".bs";
-            oName = next.svalue + ".cbs";
-            includeLines = getBS(fName);
-            string_vector cmp_lines = Compile(fName, oName);
-            for (cstrref l : cmp_lines) {
-              comp_lines.push_back(l);
+        {
+          if (j + 1 < tokens[i].size()) {
+            {
+            token next = tokens[i][j + 1];
+            if (next.isCmd) { 
+              printf("Error at line %i: Expected string after #include\n", curLineNo);
+              exit(1);
             }
-          }
-          else if (includeFileExt == ".cbs") {
-            fName = next.svalue + ".cbs";
-            includeLines = getCBSlibs(fName);
-            for (cstrref line: includeLines) {
-              comp_lines.push_back(line);
+            string_vector includeLines;
+            string fName;
+            string oName;
+            if (includeFileExt == ".bs") {
+                  
+              fName = next.svalue + ".bs";
+              oName = next.svalue + ".cbs";
+              includeLines = getBS(fName);
+              string_vector cmp_lines = Compile(fName, oName);
+              for (cstrref l : cmp_lines) {
+                comp_lines.push_back(l);
+              }
             }
-          }
-          else {
-            printf("Error at line %i: Unknown or unsupported extension '%s'\n", curLineNo, includeFileExt.c_str());
-            exit(1);
+            else if (includeFileExt == ".cbs") {
+              fName = next.svalue + ".cbs";
+              includeLines = getCBSlibs(fName);
+              for (cstrref line: includeLines) {
+                comp_lines.push_back(line);
+              }
+            }
+            else {
+              printf("Error at line %i: Unknown or unsupported extension '%s'\n", curLineNo, includeFileExt.c_str());
+              exit(1);
+            }
           }
         }
-      }
-      break;
+        break;
 
       case BS::BS_FORKW:
       case BS::BS_WHILEKW:
-      {
-        string label = "label " + to_string(loopIDNum);
-        BS_block block;
-        block.name = to_string(loopIDNum);
-        block.type = 4;
-        loopIDNum++;
-        readCmp = true;
-      }
-      break;
+        {
+          string label = "label " + to_string(loopIDNum);
+          BS_block block;
+          block.name = to_string(loopIDNum);
+          block.type = 4;
+          loopIDNum++;
+          readCmp = true;
+        }
+        break;
 
           case BS::BS_RETURN:
             {
@@ -246,12 +249,13 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
                 if (curLine.rfind("cmp", 0) == 0 && blocks.size() > 0) {
                   BS_block b = blocks.back();
                   if (b.type < BS_WHILE_BLOCK && b.type > BS_FUNCTION_BLOCK) {
-	            printf("Here '%s'\n", b.name.c_str());
+	                  printf("Here '%s'\n", b.name.c_str());
                     comp_lines.push_back(b.jmp_str);
                   }
                 }
                 curLine = "";
               }
+              curVar = "";
             }
             break;
 
@@ -312,50 +316,67 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               exit(2);
             }
             BS_block b = blocks.back();
-	    blocks.pop_back();
+	          blocks.pop_back();
             token next = tokens[i][j + 1];
             j++;
-            if (next.isCmd) {
-	      if (b.type == BS_WHILE_BLOCK) {
-              	auto it = BS::BS_LOGIC_TOKENS.find(next.ivalue);
-              	if (it != BS::BS_LOGIC_TOKENS.end()) {
-			//printf("Here at iscmd 320\n");
-			b.jmp_str = it->second + " " + b.name;
-			//printf("%s : %s\n", b.name.c_str(), b.jmp_str.c_str());
-	      	}
-		else {
-			printf("Error at line %i: Expected a logic operator\n", curLineNo);
-			exit(1);
-		}
-
-	      }
-	      else {
-		auto it1 = BS::BS_LOGIC_TOKENS.find(next.ivalue);
-		if (it1 == BS::BS_LOGIC_TOKENS.end()) {
-			printf("Error at line %i: Expected a logic operator\n", curLineNo);
-			exit(1);
-		}
-		auto it2 = BS::BS_LOGIC_OPPOSITES.find(it1->second);
-		if (it2 != BS::BS_LOGIC_OPPOSITES.end()) 
-			b.jmp_str = it2->second + " " + b.name;
-		else {
-			printf("Error at line %i: Expected a compair\n", curLineNo);
-			exit(1);
-		}
-	      }
+            if (next.isCmd && next.ivalue != BS::CLBAR) {
+	            if (b.type == BS_WHILE_BLOCK) {
+                auto it = BS::BS_LOGIC_TOKENS.find(next.ivalue);
+                if (it != BS::BS_LOGIC_TOKENS.end()) 
+                  b.jmp_str = it->second + " " + b.name; 
+                else {
+                  printf("Error at line %i: Expected a logic operator\n", curLineNo);
+                  exit(1);
+                }
+	            }
+              else {
+                auto it1 = BS::BS_LOGIC_TOKENS.find(next.ivalue);
+                if (it1 == BS::BS_LOGIC_TOKENS.end()) {
+                  printf("Error at line %i: Expected a valid logic operator: Found '%i'\n", curLineNo, next.ivalue);
+                  exit(1);
+                }
+                auto it2 = BS::BS_LOGIC_OPPOSITES.find(it1->second);
+                if (it2 != BS::BS_LOGIC_OPPOSITES.end()) 
+                  b.jmp_str = it2->second + " " + b.name;
+                else {
+                  printf("Error at line %i: Expected a compair\n", curLineNo);
+                  exit(1);
+                }
+              }
             }
-	    blocks.push_back(b);
+	        blocks.push_back(b);
           }
 
-          else if (curLine.size() > 0) {
+          else if (curLine != "") {
             // check if curline starts with mov
             if (curLine.rfind("mov", 0) == 0) {
               // check if variable is already declared
-              string varName = t.svalue;
-              if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
-                varName = "%" + makeVariableName(scopes.back(), varName);
-              curLine += varName;
-                    
+              if (t.isCmd && anyInVector<int>(t.ivalue, BS::BS_MATH_TOKENS)) {
+                cout << "here" << endl;
+                comp_lines.push_back(curLine);
+                curLine = "";
+
+                switch(t.ivalue) {
+                  case BS::MATH_ADDOP:
+                    curLine = "add " + curVar + ",";
+                    break;
+                  case BS::MATH_SUBOP:
+                    curLine = "sub " + curVar + ",";
+                    break;
+                  case BS::MATH_MULOP:
+                    curLine = "mul " + curVar + ",";
+                    break;
+                  case BS::MATH_DIVOP:
+                    curLine = "div " + curVar + ",";
+                    break;
+                }
+              }
+              else {
+                string varName = t.svalue;
+                if (varExists(makeVariableName(scopes.back(), varName), declaredVars)) 
+                  varName = "%" + makeVariableName(scopes.back(), varName);
+                curLine += varName;
+              }
             } 
 
             else if (curLine.rfind("out", 0) == 0) {
@@ -374,6 +395,7 @@ string_vector BS::Compile(cstrref fileName, cstrref outputFileName) {
               string varName = makeVariableName(scopes.back(), t.svalue);
               if (!varIsConst(varName, declaredVars)) {
                   bs_variable var = bs_variable(varName, isConst);
+                  if (curVar == "") { curVar = varName; }
                   declaredVars.push_back(var);
 
                   if (next.ivalue == BS::EQL)

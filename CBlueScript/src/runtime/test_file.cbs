@@ -1,17 +1,8 @@
-jmp main
-label test_func
-pop test_func_t
-out %test_func_t
+mov a,10
+mov b,10
+cmp %a,%b
+jle test
+mov a,1 
+out %a
 out \n
-ret
-ret
-label main
-out hello world!\n
-mov main_a,10
-add main_a,%main_a
-out %main_a
-out \n
-push %main_a
-call test_func
-out hello world1!\n
-ret
+label test
